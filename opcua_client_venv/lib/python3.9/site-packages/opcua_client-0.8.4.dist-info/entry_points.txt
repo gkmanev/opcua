@@ -1,0 +1,3 @@
+[console_scripts]
+opcua-client = uaclient.mainwindow:main
+
