@@ -1,0 +1,16 @@
+Metadata-Version: 2.1
+Name: opcua-client
+Version: 0.8.4
+Summary: OPC-UA Client GUI
+Home-page: https://github.com/FreeOpcUa/opcua-client-gui
+Author: Olivier R-D
+Author-email: UNKNOWN
+License: GNU General Public License
+Platform: UNKNOWN
+Requires-Dist: PyQt5
+Requires-Dist: asyncua
+Requires-Dist: opcua-widgets (>=0.6.0)
+
+UNKNOWN
+
+

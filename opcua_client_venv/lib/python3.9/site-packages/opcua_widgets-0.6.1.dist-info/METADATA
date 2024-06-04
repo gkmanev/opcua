@@ -1,0 +1,14 @@
+Metadata-Version: 2.1
+Name: opcua-widgets
+Version: 0.6.1
+Summary: OPC-UA Widgets
+Home-page: https://github.com/FreeOpcUa/opcua-widgets
+Author: Olivier R-D et al.
+Author-email: UNKNOWN
+License: GNU General Public License
+Platform: UNKNOWN
+Requires-Dist: asyncua
+
+UNKNOWN
+
+
