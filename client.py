@@ -18,9 +18,13 @@ class DataPublisher:
     async def publish_data(self):
         while True:
             try:
-                wind_value, power_value = await self.opcua_client.read_data()
+                wind_value, power_value = await self.opcua_client.read_data()                
                 print(f'Wind Speed: {wind_value.Value.Value} m/s')
+                url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v5={wind_value.Value.Value}"              
+                await requests.get(url_wind)
                 print(f'Power: {power_value.Value.Value} kW')
+                url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v4={wind_value.Value.Value}"  
+                await requests.get(url_power) 
                 await self.mqtt_client.connect_and_publish(self.topic_wind, str(round(wind_value.Value.Value, 2)))
                 await self.mqtt_client.connect_and_publish(self.topic_power, str(round(power_value.Value.Value, 2)))
             except ua.UaStatusCodeError as e:
@@ -41,6 +45,8 @@ class TourbineControl:
         if next_forecast_value:            
             url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v0=1"
             r = requests.get(url)
+            if r.status_code == 200:
+                pass
         else:
             url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v0=0"
             r = requests.get(url)
