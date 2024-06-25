@@ -5,6 +5,7 @@ from mqtt import MQTTClient
 from mail_processing import GmailService, FileManager
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
+from asyncua import ua
 import requests
 
 
@@ -21,10 +22,10 @@ class DataPublisher:
                 wind_value, power_value = await self.opcua_client.read_data()                
                 print(f'Wind Speed: {wind_value.Value.Value} m/s')
                 url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v5={wind_value.Value.Value}"              
-                await requests.get(url_wind)
+                requests.get(url_wind)
                 print(f'Power: {power_value.Value.Value} kW')
                 url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v4={wind_value.Value.Value}"  
-                await requests.get(url_power) 
+                requests.get(url_power) 
                 await self.mqtt_client.connect_and_publish(self.topic_wind, str(round(wind_value.Value.Value, 2)))
                 await self.mqtt_client.connect_and_publish(self.topic_power, str(round(power_value.Value.Value, 2)))
             except ua.UaStatusCodeError as e:
