@@ -21,11 +21,16 @@ class DataPublisher:
             try:
                 wind_value, power_value = await self.opcua_client.read_data()                
                 print(f'Wind Speed: {wind_value.Value.Value} m/s')
-                url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v5={wind_value.Value.Value}"              
-                requests.get(url_wind)
+                url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v5={wind_value.Value.Value}"       
+                print(url_wind)       
+                r_wind = requests.get(url_wind)
+                if r_wind.status_code == 200:
+                    print("publishing wind to blynk...")
                 print(f'Power: {power_value.Value.Value} kW')
                 url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v4={wind_value.Value.Value}"  
-                requests.get(url_power) 
+                r_power = requests.get(url_power) 
+                if r_power.status_code == 200:
+                    print("publishing power to blynk")
                 await self.mqtt_client.connect_and_publish(self.topic_wind, str(round(wind_value.Value.Value, 2)))
                 await self.mqtt_client.connect_and_publish(self.topic_power, str(round(power_value.Value.Value, 2)))
             except ua.UaStatusCodeError as e:
