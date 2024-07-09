@@ -22,10 +22,12 @@ class OPCUAClient:
 
     async def read_data(self):
         async with self.client:
-            wind_node = self.client.get_node('ns=2;s=DA.Rakovo Aris.WTG01.WMET01.HorWdSpd')
+            #wind_node = self.client.get_node('ns=2;s=DA.Rakovo Aris.WTG01.WMET01.HorWdSpd')#Aris
+            wind_node = self.client.get_node('ns=2;s=DA.Neykovo.WTG01.WMET01.HorWdSpd')#Power
             wind_value = await wind_node.read_data_value()
 
-            power_node = self.client.get_node('ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.W')
+            #power_node = self.client.get_node('ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.W')#Aris
+            power_node = self.client.get_node('ns=2;s=DA.Neykovo.WTG01.WTUR01.W')#Power
             power_value = await power_node.read_data_value()
 
             return wind_value, power_value
@@ -49,7 +51,8 @@ class OPCUAClient:
  
     async def check_tourbine_status(self):
         async with self.client:
-            status_node = self.client.get_node('ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurSt')    
+            #status_node = self.client.get_node('ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurSt')#Aris   
+            status_node = self.client.get_node('ns=2;s=DA.Neykovo.WTG01.WTUR01.TurSt') #Power 
             status_value = await status_node.read_data_value()
             return status_value
             
