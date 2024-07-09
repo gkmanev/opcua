@@ -21,13 +21,15 @@ class DataPublisher:
             try:
                 wind_value, power_value = await self.opcua_client.read_data()                
                 print(f'Wind Speed: {wind_value.Value.Value} m/s')
-                url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v5={wind_value.Value.Value}"       
+                #url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v5={wind_value.Value.Value}" # Aris
+                url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v11={wind_value.Value.Value}" # Power
                 print(url_wind)       
                 r_wind = requests.get(url_wind)
                 if r_wind.status_code == 200:
                     print("publishing wind to blynk...")
                 print(f'Power: {power_value.Value.Value} kW')
-                url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v4={wind_value.Value.Value}"  
+                #url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v4={wind_value.Value.Value}"  # Aris
+                url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v10={wind_value.Value.Value}" # Power
                 r_power = requests.get(url_power) 
                 if r_power.status_code == 200:
                     print("publishing power to blynk")
@@ -64,7 +66,8 @@ class TourbineControl:
 async def main():
     cert_base = Path(__file__).parent
     opcua_client = OPCUAClient(
-        url="opc.tcp://10.126.252.1:62550/DataAccessServer",
+        #url="opc.tcp://10.126.252.1:62550/DataAccessServer", ARIS
+        url="opc.tcp://10.126.253.1:62550/DataAccessServer", #Power
         client_app_uri="urn:freeopcua:client",
         cert_path=cert_base / "my_cert.pem",
         private_key_path=cert_base / "my_private_key.pem"
@@ -79,7 +82,7 @@ async def main():
     #await opcua_client.send_stop_start_command("start")
 
     mqtt_client = MQTTClient(broker="159.89.103.242", port=1883)    
-    publisher = DataPublisher(opcua_client, mqtt_client, topic_wind='aris/1mwind', topic_power='aris/1mpow')
+    publisher = DataPublisher(opcua_client, mqtt_client, topic_wind='power/1mwind', topic_power='power/1mpow')#power/aris
 
     await publisher.publish_data()
     # Start the scheduler
