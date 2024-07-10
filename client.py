@@ -10,19 +10,18 @@ import requests
 
 
 class DataPublisher:
-    def __init__(self, opcua_client, mqtt_client, topic_wind, topic_power):
+    def __init__(self, opcua_client, email_processor):
         self.opcua_client = opcua_client
-        self.mqtt_client = mqtt_client
-        self.topic_wind = topic_wind
-        self.topic_power = topic_power
+        self.email_processor = email_processor
+        self.turbine_status = None
+        self.publish_data()
 
-    async def test(self):
-        print("TEST IS HERE!")
+
 
     async def publish_data(self):        
         try:
             wind_value, power_value, turbine_status = await self.opcua_client.read_data()   
-            print(f'Turbine status: {turbine_status.Value.Value}')             
+            self.turbine_status = turbine_status      
             print(f'Wind Speed: {wind_value.Value.Value} m/s')
             url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v5={wind_value.Value.Value}" # Aris
             #url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v11={wind_value.Value.Value}" # Power
@@ -42,6 +41,18 @@ class DataPublisher:
             print(f"OPC UA Error: {e}")
         except Exception as e:
             print(f"Unexpected error: {e}")
+    
+    async def turbine_control(self):
+        next_forecast_value = await self.email_processor.process_files()        
+        print(f"Turbine Current Status: {self.turbine_status} || command:{next_forecast_value}") 
+        if next_forecast_value:            
+            url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v0=1"
+            r = requests.get(url)
+            if r.status_code == 200:
+                pass
+        else:
+            url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v0=0"
+            r = requests.get(url)
                
 
 # class TourbineControl:
@@ -87,7 +98,7 @@ async def main():
         status_node = status_node_aris
     )
     await opcua_client.setup()
-    process_the_file = FileManager()
+    email_forecast_processor = FileManager()
     #tourbine_control = TourbineControl(process_the_file, opcua_client)
     scheduler = AsyncIOScheduler()    
     #scheduler.add_job(tourbine_control.scheduler_check, IntervalTrigger(minutes=1))
@@ -95,12 +106,12 @@ async def main():
     # Start/Stop the turine    
     #await opcua_client.send_stop_start_command("start")
 
-    mqtt_client = MQTTClient(broker="159.89.103.242", port=1883)    
-    publisher = DataPublisher(opcua_client, mqtt_client, topic_wind='power/1mwind', topic_power='power/1mpow')#power/aris
-    scheduler.add_job(publisher.publish_data, IntervalTrigger(seconds=30))
+    #mqtt_client = MQTTClient(broker="159.89.103.242", port=1883)    
+    publisher = DataPublisher(opcua_client, email_forecast_processor)#power/aris
+    scheduler.add_job(publisher.publish_data, publisher.turbine_control, IntervalTrigger(seconds=30))
     #await publisher.publish_data()
     # Start the scheduler
-    
+
     scheduler.start()
     try:
         await asyncio.Event().wait()  # Keep the loop running
