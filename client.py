@@ -10,11 +10,11 @@ import requests
 
 
 class DataPublisher:
-    def __init__(self, opcua_client, email_processor):
+    async def __init__(self, opcua_client, email_processor):
         self.opcua_client = opcua_client
         self.email_processor = email_processor
         self.turbine_status = None
-        self.publish_data()
+        await self.publish_data()
 
 
 
@@ -108,7 +108,8 @@ async def main():
 
     #mqtt_client = MQTTClient(broker="159.89.103.242", port=1883)    
     publisher = DataPublisher(opcua_client, email_forecast_processor)#power/aris
-    scheduler.add_job(publisher.publish_data, publisher.turbine_control, IntervalTrigger(seconds=30))
+    scheduler.add_job(publisher.publish_data, IntervalTrigger(seconds=30))
+    scheduler.add_job(publisher.turbine_control, IntervalTrigger(seconds=30))
     #await publisher.publish_data()
     # Start the scheduler
 
