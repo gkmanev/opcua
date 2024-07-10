@@ -48,6 +48,7 @@ class TourbineControl:
         self.opcua_client = opcua_client
     
     async def scheduler_check(self):
+        print("HERE!!!!")
         next_forecast_value = await self.file_manager.process_files()
         current_status = await self.status_check()
         print(current_status)
