@@ -48,6 +48,7 @@ class TourbineControl:
     async def scheduler_check(self):
         next_forecast_value = await self.file_manager.process_files()
         current_status = await self.status_check()
+        print(current_status)
         # print(f"Turbine Current Status: {current_status} || command:{next_forecast_value}")        
         if next_forecast_value:            
             url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v0=1"
