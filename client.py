@@ -101,10 +101,14 @@ async def main():
     #await publisher.publish_data()
     # Start the scheduler
     scheduler.start()
+    try:
+        await asyncio.Event().wait()  # Keep the loop running
+    finally:
+        await opcua_client.close()
     
      
 if __name__ == "__main__":
-    #asyncio.run(main())
-    loop = asyncio.get_event_loop()
-    loop.create_task(main())
-    loop.run_forever()
+    asyncio.run(main())
+    # loop = asyncio.get_event_loop()
+    # loop.create_task(main())
+    # loop.run_forever()
