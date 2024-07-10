@@ -48,7 +48,7 @@ class TourbineControl:
     async def scheduler_check(self):
         next_forecast_value = await self.file_manager.process_files()
         current_status = await self.status_check()
-        print(f"Turbine Current Status: {current_status} || command:{next_forecast_value}")        
+        # print(f"Turbine Current Status: {current_status} || command:{next_forecast_value}")        
         if next_forecast_value:            
             url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v0=1"
             r = requests.get(url)
@@ -96,7 +96,7 @@ async def main():
     mqtt_client = MQTTClient(broker="159.89.103.242", port=1883)    
     publisher = DataPublisher(opcua_client, mqtt_client, topic_wind='power/1mwind', topic_power='power/1mpow')#power/aris
 
-    scheduler.add_job(publisher.publish_data, IntervalTrigger(seconds=30))
+    # scheduler.add_job(publisher.publish_data, IntervalTrigger(seconds=30))
 
     # Run forever
     await asyncio.Event().wait()

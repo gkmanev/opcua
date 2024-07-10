@@ -51,8 +51,9 @@ class OPCUAClient:
             # await command_node.set_value(ua.Variant(True, ua.VariantType.Boolean))           
  
     async def check_tourbine_status(self):
-        async with self.client:            
-            get_status_node = self.client.get_node(self.status_node) #Power 
+        async with self.client:          
+            print(f"status_node: {self.status_node}")  
+            get_status_node = self.client.get_node(self.status_node)
             status_value = await get_status_node.read_data_value()
             return status_value
             
