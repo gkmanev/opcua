@@ -19,10 +19,10 @@ class DataPublisher:
     async def test(self):
         print("TEST IS HERE!")
 
-    async def publish_data(self):
-        
+    async def publish_data(self):        
         try:
-            wind_value, power_value = await self.opcua_client.read_data()                
+            wind_value, power_value, turbine_status = await self.opcua_client.read_data()   
+            print(f'Turbine status: {turbine_status.Value.Value}')             
             print(f'Wind Speed: {wind_value.Value.Value} m/s')
             url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v5={wind_value.Value.Value}" # Aris
             #url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v11={wind_value.Value.Value}" # Power
@@ -44,27 +44,27 @@ class DataPublisher:
             print(f"Unexpected error: {e}")
                
 
-class TourbineControl:
-    def __init__(self, file_manager, opcua_client) -> None:
-        self.file_manager = file_manager
-        self.opcua_client = opcua_client
+# class TourbineControl:
+#     def __init__(self, file_manager, opcua_client) -> None:
+#         self.file_manager = file_manager
+#         self.opcua_client = opcua_client
     
-    async def scheduler_check(self):
-        next_forecast_value = await self.file_manager.process_files()
-        current_status = await self.status_check()
-        print(f"Turbine Current Status: {current_status} || command:{next_forecast_value}")        
-        if next_forecast_value:            
-            url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v0=1"
-            r = requests.get(url)
-            if r.status_code == 200:
-                pass
-        else:
-            url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v0=0"
-            r = requests.get(url)
+#     async def scheduler_check(self):
+#         next_forecast_value = await self.file_manager.process_files()
+#         current_status = await self.status_check()
+#         print(f"Turbine Current Status: {current_status} || command:{next_forecast_value}")        
+#         if next_forecast_value:            
+#             url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v0=1"
+#             r = requests.get(url)
+#             if r.status_code == 200:
+#                 pass
+#         else:
+#             url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v0=0"
+#             r = requests.get(url)
     
-    async def status_check(self):        
-        status = await self.opcua_client.check_tourbine_status()
-        return status.Value.Value
+#     async def status_check(self):        
+#         status = await self.opcua_client.check_tourbine_status()
+#         return status.Value.Value
 
 async def main():
     cert_base = Path(__file__).parent    
@@ -88,18 +88,19 @@ async def main():
     )
     await opcua_client.setup()
     process_the_file = FileManager()
-    tourbine_control = TourbineControl(process_the_file, opcua_client)
+    #tourbine_control = TourbineControl(process_the_file, opcua_client)
     scheduler = AsyncIOScheduler()    
-    scheduler.add_job(tourbine_control.scheduler_check, IntervalTrigger(minutes=1))
+    #scheduler.add_job(tourbine_control.scheduler_check, IntervalTrigger(minutes=1))
     
     # Start/Stop the turine    
     #await opcua_client.send_stop_start_command("start")
 
     mqtt_client = MQTTClient(broker="159.89.103.242", port=1883)    
     publisher = DataPublisher(opcua_client, mqtt_client, topic_wind='power/1mwind', topic_power='power/1mpow')#power/aris
-    scheduler.add_job(publisher.test, IntervalTrigger(seconds=30))
+    scheduler.add_job(publisher.publish_data, IntervalTrigger(seconds=30))
     #await publisher.publish_data()
     # Start the scheduler
+    
     scheduler.start()
     try:
         await asyncio.Event().wait()  # Keep the loop running
