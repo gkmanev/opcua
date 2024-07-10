@@ -22,16 +22,16 @@ class DataPublisher:
             print(f'Wind Speed: {wind_value.Value.Value} m/s')
             #url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v5={wind_value.Value.Value}" # Aris
             url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v11={wind_value.Value.Value}" # Power
-            print(url_wind)       
+                
             r_wind = requests.get(url_wind)
             if r_wind.status_code == 200:
-                print("publishing wind to blynk...")
+                pass
             print(f'Power: {power_value.Value.Value} kW')
             #url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v4={wind_value.Value.Value}"  # Aris
             url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v10={wind_value.Value.Value}" # Power
             r_power = requests.get(url_power) 
             if r_power.status_code == 200:
-                print("publishing power to blynk")
+                pass
             await self.mqtt_client.connect_and_publish(self.topic_wind, str(round(wind_value.Value.Value, 2)))
             await self.mqtt_client.connect_and_publish(self.topic_power, str(round(power_value.Value.Value, 2)))
         except ua.UaStatusCodeError as e:
@@ -87,17 +87,16 @@ async def main():
     )
     await opcua_client.setup()
     process_the_file = FileManager()
-    tourbine_control = TourbineControl(process_the_file, opcua_client)
-    scheduler = AsyncIOScheduler()    
-    scheduler.add_job(tourbine_control.scheduler_check, IntervalTrigger(minutes=1))
-    scheduler.start()
+    turbine_control = TourbineControl(process_the_file, opcua_client)  
     # Start/Stop the turine    
     #await opcua_client.send_stop_start_command("start")
-
     mqtt_client = MQTTClient(broker="159.89.103.242", port=1883)    
     publisher = DataPublisher(opcua_client, mqtt_client, topic_wind='power/1mwind', topic_power='power/1mpow')#power/aris
 
-    # scheduler.add_job(publisher.publish_data, IntervalTrigger(seconds=30))
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(turbine_control.scheduler_check, IntervalTrigger(minutes=1))
+    scheduler.add_job(publisher.publish_data, IntervalTrigger(seconds=30))
+    scheduler.start()
 
     # Run forever
     await asyncio.Event().wait()
