@@ -20,29 +20,29 @@ class DataPublisher:
         print("TEST IS HERE!")
 
     async def publish_data(self):
-        while True:
-            try:
-                wind_value, power_value = await self.opcua_client.read_data()                
-                print(f'Wind Speed: {wind_value.Value.Value} m/s')
-                url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v5={wind_value.Value.Value}" # Aris
-                #url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v11={wind_value.Value.Value}" # Power
-                    
-                r_wind = requests.get(url_wind)
-                if r_wind.status_code == 200:
-                    pass
-                print(f'Power: {power_value.Value.Value} kW')
-                url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v4={power_value.Value.Value}"  # Aris
-                #url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v10={power_value.Value.Value}" # Power
-                r_power = requests.get(url_power) 
-                if r_power.status_code == 200:
-                    pass
-                await self.mqtt_client.connect_and_publish(self.topic_wind, str(round(wind_value.Value.Value, 2)))
-                await self.mqtt_client.connect_and_publish(self.topic_power, str(round(power_value.Value.Value, 2)))
-            except ua.UaStatusCodeError as e:
-                print(f"OPC UA Error: {e}")
-            except Exception as e:
-                print(f"Unexpected error: {e}")
-            await asyncio.sleep(30)   
+        
+        try:
+            wind_value, power_value = await self.opcua_client.read_data()                
+            print(f'Wind Speed: {wind_value.Value.Value} m/s')
+            url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v5={wind_value.Value.Value}" # Aris
+            #url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v11={wind_value.Value.Value}" # Power
+                
+            r_wind = requests.get(url_wind)
+            if r_wind.status_code == 200:
+                pass
+            print(f'Power: {power_value.Value.Value} kW')
+            url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v4={power_value.Value.Value}"  # Aris
+            #url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v10={power_value.Value.Value}" # Power
+            r_power = requests.get(url_power) 
+            if r_power.status_code == 200:
+                pass
+            await self.mqtt_client.connect_and_publish(self.topic_wind, str(round(wind_value.Value.Value, 2)))
+            await self.mqtt_client.connect_and_publish(self.topic_power, str(round(power_value.Value.Value, 2)))
+        except ua.UaStatusCodeError as e:
+            print(f"OPC UA Error: {e}")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+               
 
 class TourbineControl:
     def __init__(self, file_manager, opcua_client) -> None:
@@ -97,7 +97,7 @@ async def main():
 
     mqtt_client = MQTTClient(broker="159.89.103.242", port=1883)    
     publisher = DataPublisher(opcua_client, mqtt_client, topic_wind='power/1mwind', topic_power='power/1mpow')#power/aris
-    scheduler.add_job(publisher.test, IntervalTrigger(seconds=30))
+    scheduler.add_job(publisher.publish_data, IntervalTrigger(seconds=30))
     #await publisher.publish_data()
     # Start the scheduler
     scheduler.start()
