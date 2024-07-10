@@ -21,20 +21,20 @@ class DataPublisher:
             try:
                 wind_value, power_value = await self.opcua_client.read_data()                
                 print(f'Wind Speed: {wind_value.Value.Value} m/s')
-                #url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v5={wind_value.Value.Value}" # Aris
-                url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v11={wind_value.Value.Value}" # Power
+                url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v5={wind_value.Value.Value}" # Aris wind
+                #url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v11={wind_value.Value.Value}" # Neykovo wind
                     
                 r_wind = requests.get(url_wind)
                 if r_wind.status_code == 200:
                     pass
                 print(f'Power: {power_value.Value.Value} kW')
-                #url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v4={wind_value.Value.Value}"  # Aris
-                url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v10={wind_value.Value.Value}" # Power
+                url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v4={power_value.Value.Value}"  # Aris power
+                #url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v10={power_value.Value.Value}" # Neykovo power
                 r_power = requests.get(url_power) 
                 if r_power.status_code == 200:
                     pass
-                await self.mqtt_client.connect_and_publish(self.topic_wind, str(round(wind_value.Value.Value, 2)))
-                await self.mqtt_client.connect_and_publish(self.topic_power, str(round(power_value.Value.Value, 2)))
+                # await self.mqtt_client.connect_and_publish(self.topic_wind, str(round(wind_value.Value.Value, 2)))
+                # await self.mqtt_client.connect_and_publish(self.topic_power, str(round(power_value.Value.Value, 2)))
             except ua.UaStatusCodeError as e:
                 print(f"OPC UA Error: {e}")
             except Exception as e:
