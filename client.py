@@ -10,11 +10,11 @@ import requests
 
 
 class DataPublisher:
-    async def __init__(self, opcua_client, email_processor):
+    def __init__(self, opcua_client, email_processor) -> None:
         self.opcua_client = opcua_client
         self.email_processor = email_processor
         self.turbine_status = None
-        await self.publish_data()
+        
 
 
 
