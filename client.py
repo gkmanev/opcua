@@ -98,7 +98,7 @@ async def main():
     mqtt_client = MQTTClient(broker="159.89.103.242", port=1883)    
     publisher = DataPublisher(opcua_client, mqtt_client, topic_wind='power/1mwind', topic_power='power/1mpow')#power/aris
     scheduler.add_job(publisher.test, IntervalTrigger(seconds=30))
-    await publisher.publish_data()
+    #await publisher.publish_data()
     # Start the scheduler
     scheduler.start()
     
