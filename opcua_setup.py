@@ -9,11 +9,14 @@ from asyncua import Client as UA_Client, ua
 
 
 class OPCUAClient:
-    def __init__(self, url, client_app_uri, cert_path, private_key_path):
+    def __init__(self, url, client_app_uri, cert_path, private_key_path, wind_node, power_node, status_node):
         self.client = UA_Client(url=url)
         self.client.application_uri = client_app_uri
         self.cert_path = cert_path
         self.private_key_path = private_key_path
+        self.wind_node = wind_node
+        self.power_node = power_node
+        self.status_node = status_node
 
     async def setup(self):
         await self.client.set_security_string(f"Basic256,SignAndEncrypt,{self.cert_path},{self.private_key_path}")
@@ -21,14 +24,12 @@ class OPCUAClient:
         await self.client.load_private_key(self.private_key_path)
 
     async def read_data(self):
-        async with self.client:
-            #wind_node = self.client.get_node('ns=2;s=DA.Rakovo Aris.WTG01.WMET01.HorWdSpd')#Aris
-            wind_node = self.client.get_node('ns=2;s=DA.Neykovo.WTG01.WMET01.HorWdSpd')#Power
-            wind_value = await wind_node.read_data_value()
-
-            #power_node = self.client.get_node('ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.W')#Aris
-            power_node = self.client.get_node('ns=2;s=DA.Neykovo.WTG01.WTUR01.W')#Power
-            power_value = await power_node.read_data_value()
+        async with self.client:            
+            get_wind_node = self.client.get_node(self.wind_node)
+            wind_value = await get_wind_node.read_data_value()
+            
+            get_power_node = self.client.get_node(self.power_node)
+            power_value = await get_power_node.read_data_value()
 
             return wind_value, power_value
         
@@ -50,10 +51,9 @@ class OPCUAClient:
             # await command_node.set_value(ua.Variant(True, ua.VariantType.Boolean))           
  
     async def check_tourbine_status(self):
-        async with self.client:
-            #status_node = self.client.get_node('ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurSt')#Aris   
-            status_node = self.client.get_node('ns=2;s=DA.Neykovo.WTG01.WTUR01.TurSt') #Power 
-            status_value = await status_node.read_data_value()
+        async with self.client:            
+            get_status_node = self.client.get_node(self.status_node) #Power 
+            status_value = await get_status_node.read_data_value()
             return status_value
             
                   
