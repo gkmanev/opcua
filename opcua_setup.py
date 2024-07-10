@@ -52,9 +52,10 @@ class OPCUAClient:
  
     async def check_tourbine_status(self):
         async with self.client:          
-            print(f"status_node: {self.status_node}")  
+            
             get_status_node = self.client.get_node(self.status_node)
             status_value = await get_status_node.read_data_value()
+            print(status_value)
             return status_value
             
                   
