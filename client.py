@@ -13,8 +13,7 @@ class DataPublisher:
     def __init__(self, opcua_client, email_processor) -> None:
         self.opcua_client = opcua_client
         self.email_processor = email_processor
-        self.turbine_status = None
-        
+        self.turbine_status = None       
 
 
 
@@ -34,9 +33,7 @@ class DataPublisher:
             #url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v10={power_value.Value.Value}" # Power
             r_power = requests.get(url_power) 
             if r_power.status_code == 200:
-                pass
-            await self.mqtt_client.connect_and_publish(self.topic_wind, str(round(wind_value.Value.Value, 2)))
-            await self.mqtt_client.connect_and_publish(self.topic_power, str(round(power_value.Value.Value, 2)))
+                pass            
         except ua.UaStatusCodeError as e:
             print(f"OPC UA Error: {e}")
         except Exception as e:
