@@ -16,6 +16,9 @@ class DataPublisher:
         self.topic_wind = topic_wind
         self.topic_power = topic_power
 
+    async def test(self):
+        print("TEST IS HERE!")
+
     async def publish_data(self):
         while True:
             try:
@@ -88,15 +91,16 @@ async def main():
     tourbine_control = TourbineControl(process_the_file, opcua_client)
     scheduler = AsyncIOScheduler()    
     scheduler.add_job(tourbine_control.scheduler_check, IntervalTrigger(minutes=1))
-    scheduler.start()
+    
     # Start/Stop the turine    
     #await opcua_client.send_stop_start_command("start")
 
     mqtt_client = MQTTClient(broker="159.89.103.242", port=1883)    
     publisher = DataPublisher(opcua_client, mqtt_client, topic_wind='power/1mwind', topic_power='power/1mpow')#power/aris
-
+    scheduler.add_job(publisher.test, IntervalTrigger(seconds=30))
     await publisher.publish_data()
     # Start the scheduler
+    scheduler.start()
     
      
 if __name__ == "__main__":
