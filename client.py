@@ -20,7 +20,7 @@ class DataPublisher:
     async def publish_data(self):        
         try:
             wind_value, power_value, turbine_status = await self.opcua_client.read_data()   
-            self.turbine_status = turbine_status      
+            self.turbine_status = turbine_status.Value.Value  
             print(f'Wind Speed: {wind_value.Value.Value} m/s')
             url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v5={wind_value.Value.Value}" # Aris
             #url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v11={wind_value.Value.Value}" # Power
@@ -78,21 +78,21 @@ async def main():
     cert_base = Path(__file__).parent    
     
     url_aris = "opc.tcp://10.126.252.1:62550/DataAccessServer"
-    url_power = "opc.tcp://10.126.253.1:62550/DataAccessServer"
     wind_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WMET01.HorWdSpd'
-    wind_node_neykovo = 'ns=2;s=DA.Neykovo.WTG01.WMET01.HorWdSpd'
     power_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.W'
-    power_node_neykovo = 'ns=2;s=DA.Neykovo.WTG01.WTUR01.W'
     status_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurSt'
-    status_node_neykovo = 'ns=2;s=DA.Neykovo.WTG01.WTUR01.TurSt'
+    # url_power = "opc.tcp://10.126.253.1:62550/DataAccessServer"    
+    # wind_node_neykovo = 'ns=2;s=DA.Neykovo.WTG01.WMET01.HorWdSpd'    
+    # power_node_neykovo = 'ns=2;s=DA.Neykovo.WTG01.WTUR01.W'    
+    # status_node_neykovo = 'ns=2;s=DA.Neykovo.WTG01.WTUR01.TurSt'
     opcua_client = OPCUAClient(        
         url = url_aris, #url_power        
         client_app_uri="urn:freeopcua:client",
         cert_path=cert_base / "my_cert.pem",
         private_key_path=cert_base / "my_private_key.pem",
-        wind_node = wind_node_aris,
-        power_node = power_node_aris,
-        status_node = status_node_aris
+        wind_node = wind_node_aris,#wind_node_neykovo
+        power_node = power_node_aris,#power_node_neykovo
+        status_node = status_node_aris,#status_node_neykovo
     )
     await opcua_client.setup()
     email_forecast_processor = FileManager()
@@ -105,8 +105,8 @@ async def main():
 
     #mqtt_client = MQTTClient(broker="159.89.103.242", port=1883)    
     publisher = DataPublisher(opcua_client, email_forecast_processor)#power/aris
-    scheduler.add_job(publisher.publish_data, IntervalTrigger(seconds=30))
-    scheduler.add_job(publisher.turbine_control, IntervalTrigger(seconds=30))
+    scheduler.add_job(publisher.publish_data, IntervalTrigger(minutes=1))
+    scheduler.add_job(publisher.turbine_control, IntervalTrigger(minutes=1))
     #await publisher.publish_data()
     # Start the scheduler
 
