@@ -22,15 +22,15 @@ class DataPublisher:
             wind_value, power_value, turbine_status = await self.opcua_client.read_data()   
             self.turbine_status = turbine_status.Value.Value  
             print(f'Wind Speed: {wind_value.Value.Value} m/s')
-            url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v5={wind_value.Value.Value}" # Aris
-            #url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v11={wind_value.Value.Value}" # Power
+            #url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v5={wind_value.Value.Value}" # Aris
+            url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v11={wind_value.Value.Value}" # Power
                 
             r_wind = requests.get(url_wind)
             if r_wind.status_code == 200:
                 pass
             print(f'Power: {power_value.Value.Value} kW')
-            url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v4={power_value.Value.Value}"  # Aris
-            #url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v10={power_value.Value.Value}" # Power
+            #url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v4={power_value.Value.Value}"  # Aris
+            url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v10={power_value.Value.Value}" # Power
             r_power = requests.get(url_power) 
             if r_power.status_code == 200:
                 pass            
@@ -77,22 +77,22 @@ class DataPublisher:
 async def main():
     cert_base = Path(__file__).parent    
     
-    url_aris = "opc.tcp://10.126.252.1:62550/DataAccessServer"
-    wind_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WMET01.HorWdSpd'
-    power_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.W'
-    status_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurSt'
-    # url_power = "opc.tcp://10.126.253.1:62550/DataAccessServer"    
-    # wind_node_neykovo = 'ns=2;s=DA.Neykovo.WTG01.WMET01.HorWdSpd'    
-    # power_node_neykovo = 'ns=2;s=DA.Neykovo.WTG01.WTUR01.W'    
-    # status_node_neykovo = 'ns=2;s=DA.Neykovo.WTG01.WTUR01.TurSt'
+    # url_aris = "opc.tcp://10.126.252.1:62550/DataAccessServer"
+    # wind_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WMET01.HorWdSpd'
+    # power_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.W'
+    # status_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurSt'
+    url_power = "opc.tcp://10.126.253.1:62550/DataAccessServer"    
+    wind_node_neykovo = 'ns=2;s=DA.Neykovo.WTG01.WMET01.HorWdSpd'    
+    power_node_neykovo = 'ns=2;s=DA.Neykovo.WTG01.WTUR01.W'    
+    status_node_neykovo = 'ns=2;s=DA.Neykovo.WTG01.WTUR01.TurSt'
     opcua_client = OPCUAClient(        
-        url = url_aris, #url_power        
+        url = url_power, #url_aris      
         client_app_uri="urn:freeopcua:client",
         cert_path=cert_base / "my_cert.pem",
         private_key_path=cert_base / "my_private_key.pem",
-        wind_node = wind_node_aris,#wind_node_neykovo
-        power_node = power_node_aris,#power_node_neykovo
-        status_node = status_node_aris,#status_node_neykovo
+        wind_node = wind_node_neykovo,#wind_node_aris
+        power_node = power_node_neykovo,#power_node_aris
+        status_node = status_node_neykovo,#status_node_aris
     )
     await opcua_client.setup()
     email_forecast_processor = FileManager()
