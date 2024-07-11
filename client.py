@@ -42,7 +42,7 @@ class DataPublisher:
     async def turbine_control(self):
         next_forecast_value = await self.email_processor.process_files()        
         print(f"Turbine Current Status: {self.turbine_status} || command:{next_forecast_value}") 
-        if next_forecast_value:            
+        if next_forecast_value is not "NA":            
             url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v0=1"
             r = requests.get(url)
             if r.status_code == 200:
