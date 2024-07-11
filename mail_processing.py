@@ -138,22 +138,7 @@ class FileManager:
                     dfNeykovo.index.name = 'Power forecast'
                     dfA.columns = ['pow']
                     dfNeykovo.columns = ['pow']                    
-                    # for row in dfA.itertuples():
-                    #     timenow = datetime.now()
-                    #     quarter_min = self.lookup_quarterly(timenow.minute)                           
-                    #     if quarter_min == 0:
-                    #         quarter_hour = timenow.hour + 1
-                    #     else:
-                    #         quarter_hour = timenow.hour                     
-                    #     forecast_hour = row.Index.hour
-                    #     forecast_min = row.Index.minute
-                    #     if quarter_hour == forecast_hour and forecast_min == quarter_min:                            
-                    #         power = row.pow
-                    #         print(f"forecast_hour={forecast_hour}:{forecast_min} || quarter_hour={quarter_hour}:{quarter_min} || Real Time:{timenow.hour}:{timenow.minute} || Power:{power}")
-                    #         return power
-                    
-                    #Neykovo Forecast Extractor
-                    for row in dfNeykovo.itertuples():
+                    for row in dfA.itertuples():
                         timenow = datetime.now()
                         quarter_min = self.lookup_quarterly(timenow.minute)                           
                         if quarter_min == 0:
@@ -166,6 +151,21 @@ class FileManager:
                             power = row.pow
                             print(f"forecast_hour={forecast_hour}:{forecast_min} || quarter_hour={quarter_hour}:{quarter_min} || Real Time:{timenow.hour}:{timenow.minute} || Power:{power}")
                             return power
+                    
+                    #Neykovo Forecast Extractor
+                    # for row in dfNeykovo.itertuples():
+                    #     timenow = datetime.now()
+                    #     quarter_min = self.lookup_quarterly(timenow.minute)                           
+                    #     if quarter_min == 0:
+                    #         quarter_hour = timenow.hour + 1
+                    #     else:
+                    #         quarter_hour = timenow.hour                     
+                    #     forecast_hour = row.Index.hour
+                    #     forecast_min = row.Index.minute
+                    #     if quarter_hour == forecast_hour and forecast_min == quarter_min:                            
+                    #         power = row.pow
+                    #         print(f"forecast_hour={forecast_hour}:{forecast_min} || quarter_hour={quarter_hour}:{quarter_min} || Real Time:{timenow.hour}:{timenow.minute} || Power:{power}")
+                    #         return power
                             
     
     def lookup_quarterly(self, minutes):
