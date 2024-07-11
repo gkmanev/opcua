@@ -91,7 +91,7 @@ class GmailService:
                     mail_hour = date_obj.hour
                
         print(f"mail_hour:{mail_hour}")
-        if mail_hour and mail_hour >=12:
+        if mail_hour and mail_hour >=8: #Filter additional mails with clearings from EnPro
             await self.parse_parts(self.service, parts, folder_name, message)
             print("=" * 50)
 
@@ -173,7 +173,7 @@ class ForecastProcessor:
         self.file_manager = FileManager()
 
     async def proceed_forecast(self):
-        now = datetime.now() - timedelta(days=2)
+        now = datetime.now() 
         after_date = now.strftime("%Y/%m/%d")
         sender_email = "trading@energo-pro.bg"
         query_str = f"from:{sender_email} after:{after_date}"
