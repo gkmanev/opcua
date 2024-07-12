@@ -32,7 +32,7 @@ class DataPublisher:
                 pass
             print(f'Power: {power_value.Value.Value} kW')
             self.accumulate_power += float(power_value.Value.Value)
-            print(f"Accumulate power = {self.accumulate_power}")
+            print(f"Accumulate power print = {self.accumulate_power}")
             url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v4={power_value.Value.Value}"  # Aris            
             r_power = requests.get(url_power) 
             if r_power.status_code == 200:
