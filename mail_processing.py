@@ -147,8 +147,6 @@ class FileManager:
                         forecast = await self.forecast_extractor(dfNeykovo)
                     elif self.farm == 'aris':
                         forecast = await self.forecast_extractor(dfA)
-                        print(f"forecast={forecast}")
-
                     else:
                         forecast = None
                     return forecast
