@@ -31,7 +31,9 @@ class DataPublisher:
             r_wind = requests.get(url_wind)
             if r_wind.status_code == 200:
                 pass
-            # current_minute = datetime.now().minute
+            current_minute = datetime.now().minute
+            print(current_minute)
+            print(type(current_minute))
             # if current_minute % 15 == 0:
             #     self.accumulate_power = 0
             #     print("Accumulate power resetting")
