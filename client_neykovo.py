@@ -54,19 +54,20 @@ class DataPublisher:
     async def turbine_control(self):
         next_forecast_value = await self.email_processor.process_files()        
         print(f"Turbine Current Status: {self.turbine_status} || command:{next_forecast_value}") 
-        if next_forecast_value != "NA":      
-            converted_to_kw = float(next_forecast_value)*1000
-            url_forecast = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v9={converted_to_kw}" #V9 Neykovo V2 Aris
-            r_forecast = requests.get(url_forecast)
-            if r_forecast.status_code == 200:
-                pass
-            url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v0=1"
-            r = requests.get(url)
-            if r.status_code == 200:
-                pass
-        else:
-            url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v0=0"
-            r = requests.get(url)               
+        if next_forecast_value:
+            if next_forecast_value != "NA":      
+                converted_to_kw = float(next_forecast_value)*1000
+                url_forecast = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v9={converted_to_kw}" #V9 Neykovo V2 Aris
+                r_forecast = requests.get(url_forecast)
+                if r_forecast.status_code == 200:
+                    pass
+                url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v0=1"
+                r = requests.get(url)
+                if r.status_code == 200:
+                    pass
+            else:
+                url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v0=0"
+                r = requests.get(url)               
 
 
 async def main():
