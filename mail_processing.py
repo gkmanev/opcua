@@ -144,9 +144,9 @@ class FileManager:
                     dfA.columns = ['pow']
                     dfNeykovo.columns = ['pow']
                     if self.farm == 'neykovo':
-                        forecast = self.forecast_extractor(dfNeykovo)
+                        forecast = await self.forecast_extractor(dfNeykovo)
                     elif self.farm == 'aris':
-                        forecast = self.forecast_extractor(dfA)
+                        forecast = await self.forecast_extractor(dfA)
                     else:
                         forecast = None
                     return forecast
@@ -183,12 +183,12 @@ class FileManager:
    
 
 class ForecastProcessor:
-    def __init__(self):
+    def __init__(self):        
         self.gmail_service = GmailService()
-        self.file_manager = FileManager()
+        # self.file_manager = FileManager()
 
     async def proceed_forecast(self):
-        now = datetime.now() 
+        now = datetime.now()
         after_date = now.strftime("%Y/%m/%d")
         sender_email = "trading@energo-pro.bg"
         query_str = f"from:{sender_email} after:{after_date}"
@@ -198,11 +198,12 @@ class ForecastProcessor:
         for msg in results:
             await self.gmail_service.read_message(msg)
 
-    async def prepare_files(self):
-        await self.file_manager.process_files()
+    # async def prepare_files(self):
+    #     await self.file_manager.process_files()
 
 if __name__ == "__main__":
     processor = ForecastProcessor()
+    file_manager = FileManager("aris")
     loop = asyncio.get_event_loop()
     loop.run_until_complete(processor.proceed_forecast())
-    loop.run_until_complete(processor.prepare_files())
+    loop.run_until_complete(file_manager.process_files())
