@@ -2,9 +2,10 @@ import asyncio
 from pathlib import Path
 from opcua_setup import OPCUAClient
 from mqtt import MQTTClient
-from mail_processing import GmailService, FileManager
+from mail_processing import GmailService, FileManager, ForecastProcessor
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
+from apscheduler.triggers.cron import CronTrigger
 from asyncua import ua
 import requests
 
@@ -73,11 +74,13 @@ async def main():
         status_node = status_node_aris,
     )
     await opcua_client.setup()
-    email_forecast_processor = FileManager("aris")    
+    file_forecast_processor = FileManager("aris")    
+    gmail_processor = ForecastProcessor()
     scheduler = AsyncIOScheduler()         
-    publisher = DataPublisher(opcua_client, email_forecast_processor)
+    publisher = DataPublisher(opcua_client, file_forecast_processor)
     scheduler.add_job(publisher.publish_data, IntervalTrigger(minutes=1))
     scheduler.add_job(publisher.turbine_control, IntervalTrigger(minutes=1))  
+    scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=13, minute=10))
 
     scheduler.start()
     try:
