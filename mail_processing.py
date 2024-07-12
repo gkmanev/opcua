@@ -72,7 +72,7 @@ class GmailService:
                                     async with aiofiles.open(filepath, "wb") as f:
                                         await f.write(urlsafe_b64decode(data))
 
-    async def read_message(self, message):
+    async def read_message(self, message, price_clearing=False):
         msg = self.service.users().messages().get(userId='me', id=message['id'], format='full').execute()
         payload = msg['payload']
         headers = payload.get("headers")
@@ -91,7 +91,11 @@ class GmailService:
                     mail_hour = date_obj.hour
                
         print(f"mail_hour:{mail_hour}")
-        if mail_hour and mail_hour >=8: #Filter additional mails with clearings from EnPro
+        if price_clearing:
+            if mail_hour and mail_hour >=13: #Filter additional mails with clearings from EnPro
+                await self.parse_parts(self.service, parts, folder_name, message)
+                print("=" * 50)
+        else:
             await self.parse_parts(self.service, parts, folder_name, message)
             print("=" * 50)
 
@@ -102,7 +106,7 @@ class FileManager:
 
 
     def get_file_name(self, folder):
-        tomorrow = date.today() #- timedelta(days=1)
+        tomorrow = date.today()
         d1 = tomorrow.strftime("%d.%m.%Y")
         st = folder.split("_")[1].split("xls")[0]
         file_date = st.split('.')
@@ -184,26 +188,25 @@ class FileManager:
 
 class ForecastProcessor:
     def __init__(self):        
-        self.gmail_service = GmailService()
-        # self.file_manager = FileManager()
+        self.gmail_service = GmailService()        
 
-    async def proceed_forecast(self):
-        now = datetime.now() - timedelta(days=1)
+    # Call it with clearing to check for clearing mails
+    async def proceed_forecast(self, clearing=False):
+        now = datetime.now()
+        #temp = datetime.now() - timedelta(days=5)
         after_date = now.strftime("%Y/%m/%d")
+        #before_date = temp.strftime("%Y/%m/%d")
         sender_email = "trading@energo-pro.bg"
-        query_str = f"from:{sender_email} after:{after_date}"
+        query_str = f"from:{sender_email} after:{after_date} "
         print(query_str)
         results = await self.gmail_service.search_messages(query_str)
-        print(f"Found {len(results)} results.")
+        print(f"Found {len(results)} results.")        
         for msg in results:
-            await self.gmail_service.read_message(msg)
-
-    # async def prepare_files(self):
-    #     await self.file_manager.process_files()
+            await self.gmail_service.read_message(msg, price_clearing=clearing)
 
 if __name__ == "__main__":
     processor = ForecastProcessor()
     file_manager = FileManager("aris")
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(processor.proceed_forecast())
+    loop.run_until_complete(processor.proceed_forecast(clearing=False))
     loop.run_until_complete(file_manager.process_files())
