@@ -16,6 +16,7 @@ class DataPublisher:
         self.opcua_client = opcua_client
         self.email_processor = email_processor
         self.turbine_status = None       
+        self.accumulate_power = 0
 
 
 
@@ -30,6 +31,8 @@ class DataPublisher:
             if r_wind.status_code == 200:
                 pass
             print(f'Power: {power_value.Value.Value} kW')
+            self.accumulate_power += float(power_value.Value.Value)
+            print(f"Accumulate power = {self.accumulate_power}")
             url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v4={power_value.Value.Value}"  # Aris            
             r_power = requests.get(url_power) 
             if r_power.status_code == 200:
