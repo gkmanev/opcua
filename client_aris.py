@@ -7,6 +7,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.cron import CronTrigger
 from asyncua import ua
+from functools import partial
 import requests
 
 
@@ -82,7 +83,7 @@ async def main():
     scheduler.add_job(publisher.publish_data, IntervalTrigger(minutes=1))
     scheduler.add_job(publisher.turbine_control, IntervalTrigger(minutes=1))  
     scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=14, minute=20))
-    scheduler.add_job(gmail_processor.proceed_forecast(clearing=True), CronTrigger(hour=16, minute=30))
+    scheduler.add_job(partial(gmail_processor.proceed_forecast, clearing=True), CronTrigger(hour=16, minute=30))
 
     scheduler.start()
     try:
