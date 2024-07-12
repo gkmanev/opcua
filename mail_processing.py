@@ -96,6 +96,11 @@ class GmailService:
             print("=" * 50)
 
 class FileManager:
+
+    def __init__(self, farm) -> None:
+        self.farm = farm
+
+
     def get_file_name(self, folder):
         tomorrow = date.today() #- timedelta(days=1)
         d1 = tomorrow.strftime("%d.%m.%Y")
@@ -137,36 +142,31 @@ class FileManager:
                     dfA.index.name = 'Aris foreacast'
                     dfNeykovo.index.name = 'Power forecast'
                     dfA.columns = ['pow']
-                    dfNeykovo.columns = ['pow']                    
-                    for row in dfA.itertuples():
-                        timenow = datetime.now()
-                        quarter_min = self.lookup_quarterly(timenow.minute)                           
-                        if quarter_min == 0:
-                            quarter_hour = timenow.hour + 1
-                        else:
-                            quarter_hour = timenow.hour                     
-                        forecast_hour = row.Index.hour
-                        forecast_min = row.Index.minute
-                        if quarter_hour == forecast_hour and forecast_min == quarter_min:                            
-                            power = row.pow
-                            print(f"forecast_hour={forecast_hour}:{forecast_min} || quarter_hour={quarter_hour}:{quarter_min} || Real Time:{timenow.hour}:{timenow.minute} || Power:{power}")
-                            return power
+                    dfNeykovo.columns = ['pow']
+                    if self.farm == 'neykovo':
+                        forecast = self.forecast_extractor(dfNeykovo)
+                    elif self.farm == 'aris':
+                        forecast = self.forecast_extractor(dfA)
+                    else:
+                        forecast = None
+                    return forecast
                     
-                    #Neykovo Forecast Extractor
-                    # for row in dfNeykovo.itertuples():
-                    #     timenow = datetime.now()
-                    #     quarter_min = self.lookup_quarterly(timenow.minute)                           
-                    #     if quarter_min == 0:
-                    #         quarter_hour = timenow.hour + 1
-                    #     else:
-                    #         quarter_hour = timenow.hour                     
-                    #     forecast_hour = row.Index.hour
-                    #     forecast_min = row.Index.minute
-                    #     if quarter_hour == forecast_hour and forecast_min == quarter_min:                            
-                    #         power = row.pow
-                    #         print(f"forecast_hour={forecast_hour}:{forecast_min} || quarter_hour={quarter_hour}:{quarter_min} || Real Time:{timenow.hour}:{timenow.minute} || Power:{power}")
-                    #         return power
-                            
+    async def forecast_extractor(self, wind_farm_df):                    
+        for row in wind_farm_df.itertuples():
+            timenow = datetime.now()
+            quarter_min = self.lookup_quarterly(timenow.minute)                           
+            if quarter_min == 0:
+                quarter_hour = timenow.hour + 1
+            else:
+                quarter_hour = timenow.hour                     
+            forecast_hour = row.Index.hour
+            forecast_min = row.Index.minute
+            if quarter_hour == forecast_hour and forecast_min == quarter_min:                            
+                power = row.pow
+                print(f"forecast_hour={forecast_hour}:{forecast_min} || quarter_hour={quarter_hour}:{quarter_min} || Real Time:{timenow.hour}:{timenow.minute} || Power:{power}")
+                return power
+                    
+                   
     
     def lookup_quarterly(self, minutes):
         
