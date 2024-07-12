@@ -32,16 +32,15 @@ class DataPublisher:
             if r_wind.status_code == 200:
                 pass
             current_minute = datetime.now().minute
-            print(current_minute)
-            print(type(current_minute))
-            # if current_minute % 15 == 0:
-            #     self.accumulate_power = 0
-            #     print("Accumulate power resetting")
-            # self.accumulate_power += float(power_value.Value.Value)
-            # url_aris_accumulate = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v1={self.accumulate_power/60}"  # Aris  
-            # r_accumulate = requests.get(url_aris_accumulate)
-            # if r_accumulate.status_code == 200:
-            #     pass
+      
+            if current_minute % 15 == 0:
+                self.accumulate_power = 0
+                print("Accumulate power resetting")
+            self.accumulate_power += int(power_value.Value.Value)
+            url_aris_accumulate = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v1={self.accumulate_power/60}"  # Aris  
+            r_accumulate = requests.get(url_aris_accumulate)
+            if r_accumulate.status_code == 200:
+                pass
             print(f'Power: {power_value.Value.Value} kW')
             
             print(f"Accumulate power print = {self.accumulate_power/60}")
