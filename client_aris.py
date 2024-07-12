@@ -7,6 +7,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.cron import CronTrigger
 from asyncua import ua
+from functools import partial
 import requests
 
 
@@ -15,6 +16,7 @@ class DataPublisher:
         self.opcua_client = opcua_client
         self.email_processor = email_processor
         self.turbine_status = None       
+        self.accumulate_power = 0
 
 
 
@@ -29,6 +31,8 @@ class DataPublisher:
             if r_wind.status_code == 200:
                 pass
             print(f'Power: {power_value.Value.Value} kW')
+            self.accumulate_power += float(power_value.Value.Value)
+            print(f"Accumulate power print = {self.accumulate_power}")
             url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v4={power_value.Value.Value}"  # Aris            
             r_power = requests.get(url_power) 
             if r_power.status_code == 200:
@@ -81,7 +85,8 @@ async def main():
     publisher = DataPublisher(opcua_client, file_forecast_processor)
     scheduler.add_job(publisher.publish_data, IntervalTrigger(minutes=1))
     scheduler.add_job(publisher.turbine_control, IntervalTrigger(minutes=1))  
-    scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=13, minute=30))
+    scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=14, minute=20))
+    scheduler.add_job(partial(gmail_processor.proceed_forecast, clearing=True), CronTrigger(hour=16, minute=30))
 
     scheduler.start()
     try:
