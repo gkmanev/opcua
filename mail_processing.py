@@ -188,7 +188,7 @@ class ForecastProcessor:
         # self.file_manager = FileManager()
 
     async def proceed_forecast(self):
-        now = datetime.now()
+        now = datetime.now() - timedelta(days=1)
         after_date = now.strftime("%Y/%m/%d")
         sender_email = "trading@energo-pro.bg"
         query_str = f"from:{sender_email} after:{after_date}"
