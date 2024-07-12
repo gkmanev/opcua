@@ -62,12 +62,12 @@ class DataPublisher:
                 r_forecast = requests.get(url_forecast)
                 if r_forecast.status_code == 200:
                     pass
-                url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v0=1"
+                url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v17=1"
                 r = requests.get(url)
                 if r.status_code == 200:
                     pass
             else:
-                url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v0=0"
+                url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v17=0"
                 r = requests.get(url)               
 
 
@@ -96,7 +96,7 @@ async def main():
 
     scheduler.add_job(publisher.publish_data, IntervalTrigger(minutes=1))
     scheduler.add_job(publisher.turbine_control, IntervalTrigger(minutes=1))
-    scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=14, minute=16))
+    scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=12, minute=16))
     scheduler.add_job(partial(gmail_processor.proceed_forecast, clearing=True), CronTrigger(hour=16, minute=30))
 
 
