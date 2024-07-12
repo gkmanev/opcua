@@ -36,7 +36,7 @@ class DataPublisher:
             if current_minute % 15 == 0:
                 self.accumulate_power = 0
                 print("Accumulate power resetting")
-            self.accumulate_power += float(power_value.Value.Value)
+            self.accumulate_power += int(power_value.Value.Value)
             url_neykovo_accumulate = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v8={self.accumulate_power/60}"  # Neykovo  
             r_accumulate = requests.get(url_neykovo_accumulate)
             if r_accumulate.status_code == 200:
