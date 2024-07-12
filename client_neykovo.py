@@ -26,7 +26,7 @@ class DataPublisher:
         try:
             wind_value, power_value, turbine_status = await self.opcua_client.read_data()   
             self.turbine_status = turbine_status.Value.Value  
-            #print(f'Wind Speed: {wind_value.Value.Value} m/s')
+            print(f'Wind Speed: {wind_value.Value.Value} m/s')
             url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v11={wind_value.Value.Value}" # Neykovo
                 
             r_wind = requests.get(url_wind)
@@ -35,13 +35,14 @@ class DataPublisher:
             current_minute = datetime.now().minute
             if current_minute % 15 == 0:
                 self.accumulate_power = 0
-                print("Accumulate power resetting on every 15th min")
+                print("Accumulate resetting on every 15th min")
             self.accumulate_power += int(power_value.Value.Value)
+            print(f"accumulated energy = {self.accumulate_power}")
             url_neykovo_accumulate = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v8={self.accumulate_power/60}"  # Neykovo  
             r_accumulate = requests.get(url_neykovo_accumulate)
             if r_accumulate.status_code == 200:
                 pass
-            #print(f'Power: {power_value.Value.Value} kW')
+            print(f'Power: {power_value.Value.Value} kW')
             url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v10={power_value.Value.Value}" # Neykovo
             r_power = requests.get(url_power) 
             if r_power.status_code == 200:
