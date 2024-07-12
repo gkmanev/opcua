@@ -34,7 +34,7 @@ class DataPublisher:
             current_minute = datetime.now().minute
             if current_minute % 15 == 0:
                 self.accumulate_power = 0
-                print("Accumulate power reset to 0")
+                print("Accumulate power resetting")
             self.accumulate_power += float(power_value.Value.Value)
             url_aris_accumulate = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v1={self.accumulate_power/60}"  # Aris  
             r_accumulate = requests.get(url_aris_accumulate)
