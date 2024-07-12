@@ -81,7 +81,7 @@ async def main():
     publisher = DataPublisher(opcua_client, file_forecast_processor)
     scheduler.add_job(publisher.publish_data, IntervalTrigger(minutes=1))
     scheduler.add_job(publisher.turbine_control, IntervalTrigger(minutes=1))  
-    scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=13, minute=10))
+    scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=13, minute=30))
 
     scheduler.start()
     try:
