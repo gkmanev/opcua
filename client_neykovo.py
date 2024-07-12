@@ -26,7 +26,7 @@ class DataPublisher:
         try:
             wind_value, power_value, turbine_status = await self.opcua_client.read_data()   
             self.turbine_status = turbine_status.Value.Value  
-            print(f'Wind Speed: {wind_value.Value.Value} m/s')
+            #print(f'Wind Speed: {wind_value.Value.Value} m/s')
             url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v11={wind_value.Value.Value}" # Neykovo
                 
             r_wind = requests.get(url_wind)
@@ -41,7 +41,7 @@ class DataPublisher:
             r_accumulate = requests.get(url_neykovo_accumulate)
             if r_accumulate.status_code == 200:
                 pass
-            print(f'Power: {power_value.Value.Value} kW')
+            #print(f'Power: {power_value.Value.Value} kW')
             url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v10={power_value.Value.Value}" # Neykovo
             r_power = requests.get(url_power) 
             if r_power.status_code == 200:
@@ -95,7 +95,7 @@ async def main():
 
     scheduler.add_job(publisher.publish_data, IntervalTrigger(minutes=1))
     scheduler.add_job(publisher.turbine_control, IntervalTrigger(minutes=1))
-    scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=16, minute=16))
+    scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=14, minute=16))
     scheduler.add_job(partial(gmail_processor.proceed_forecast, clearing=True), CronTrigger(hour=16, minute=30))
 
 
