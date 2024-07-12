@@ -8,6 +8,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.cron import CronTrigger
 from asyncua import ua
 from functools import partial
+from datetime import datetime
 
 import requests
 
@@ -16,7 +17,8 @@ class DataPublisher:
     def __init__(self, opcua_client, email_processor) -> None:
         self.opcua_client = opcua_client
         self.email_processor = email_processor
-        self.turbine_status = None       
+        self.turbine_status = None      
+        self.accumulate_power = 0 
 
 
 
@@ -29,6 +31,15 @@ class DataPublisher:
                 
             r_wind = requests.get(url_wind)
             if r_wind.status_code == 200:
+                pass
+            current_minute = datetime.now().minute
+            if current_minute % 15 == 0:
+                self.accumulate_power = 0
+                print("Accumulate power resetting")
+            self.accumulate_power += float(power_value.Value.Value)
+            url_neykovo_accumulate = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v8={self.accumulate_power/60}"  # Neykovo  
+            r_accumulate = requests.get(url_neykovo_accumulate)
+            if r_accumulate.status_code == 200:
                 pass
             print(f'Power: {power_value.Value.Value} kW')
             url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v10={power_value.Value.Value}" # Neykovo
