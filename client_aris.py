@@ -81,8 +81,8 @@ class DataPublisher:
             else:
                 url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v0=0"
                 async with session.get(url) as response:
-                    if response.status == 200:
-                        pass         
+                        if response.status == 200:
+                            pass         
 
     async def get_price(self):
         price = await self.dam_price_processor.ibex_price()
@@ -91,6 +91,8 @@ class DataPublisher:
             async with session.get(url_price) as response:
                 if response.status == 200:
                     pass
+
+        
         
 
 
@@ -120,6 +122,8 @@ async def main():
     scheduler.add_job(publisher.turbine_control, IntervalTrigger(minutes=1))  
     scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=11, minute=42))
     scheduler.add_job(partial(gmail_processor.proceed_forecast, clearing=True), CronTrigger(hour=16, minute=30))
+    scheduler.add_job(publisher.get_price, IntervalTrigger(minutes=1))  
+
 
     scheduler.start()
     try:
