@@ -1,5 +1,8 @@
 import asyncio
 import aiofiles
+
+import aiohttp
+
 from datetime import datetime, date, timedelta
 import pandas as pd
 from googleapiclient.discovery import build
@@ -204,9 +207,12 @@ class ForecastProcessor:
         for msg in results:
             await self.gmail_service.read_message(msg, price_clearing=clearing)
 
+   
 if __name__ == "__main__":
+   
     processor = ForecastProcessor()
     file_manager = FileManager("aris")
     loop = asyncio.get_event_loop()
     loop.run_until_complete(processor.proceed_forecast(clearing=False))
     loop.run_until_complete(file_manager.process_files())
+    loop.run_until_complete(test.get_price())

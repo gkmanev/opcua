@@ -1,21 +1,24 @@
 import asyncio
+import aiohttp
 from pathlib import Path
 from opcua_setup import OPCUAClient
 from mqtt import MQTTClient
 from mail_processing import GmailService, FileManager, ForecastProcessor
+from price_processing import PriceProcessor
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.cron import CronTrigger
 from asyncua import ua
 from functools import partial
 from datetime import datetime
-import requests
+
 
 
 class DataPublisher:
-    def __init__(self, opcua_client, email_processor) -> None:
+    def __init__(self, opcua_client, email_processor, dam_price_processor) -> None:
         self.opcua_client = opcua_client
         self.email_processor = email_processor
+        self.dam_price_processor = dam_price_processor
         self.turbine_status = None       
         self.accumulate_power = 0
 
@@ -26,11 +29,12 @@ class DataPublisher:
             wind_value, power_value, turbine_status = await self.opcua_client.read_data()   
             self.turbine_status = turbine_status.Value.Value  
             print(f'Wind Speed: {wind_value.Value.Value} m/s')
-            url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v5={wind_value.Value.Value}" # Aris           
-                
-            r_wind = requests.get(url_wind)
-            if r_wind.status_code == 200:
-                pass
+            url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v5={wind_value.Value.Value}" # Aris  
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url_wind) as response:
+                    if response.status == 200:
+                        pass                         
+            
             current_minute = datetime.now().minute
       
             if current_minute % 15 == 0:
@@ -38,16 +42,18 @@ class DataPublisher:
                 print("Accumulate power resetting")
             self.accumulate_power += int(power_value.Value.Value)
             url_aris_accumulate = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v1={self.accumulate_power/60}"  # Aris  
-            r_accumulate = requests.get(url_aris_accumulate)
-            if r_accumulate.status_code == 200:
-                pass
-            print(f'Power: {power_value.Value.Value} kW')
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url_aris_accumulate) as response:
+                    if response.status == 200:
+                        pass    
+       
+            print(f'Power: {power_value.Value.Value} kW')            
             
-            print(f"Accumulate power print = {self.accumulate_power/60}")
-            url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v4={power_value.Value.Value}"  # Aris            
-            r_power = requests.get(url_power) 
-            if r_power.status_code == 200:
-                pass            
+            url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v4={power_value.Value.Value}"  # Aris  
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url_power) as response:
+                    if response.status == 200:
+                        pass   
         except ua.UaStatusCodeError as e:
             print(f"OPC UA Error: {e}")
         except Exception as e:
@@ -62,17 +68,30 @@ class DataPublisher:
             if next_forecast_value != "NA":      
                 converted_to_kw = float(next_forecast_value)*1000
                 url_forecast = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v2={converted_to_kw}" 
-                r_forecast = requests.get(url_forecast)
-                if r_forecast.status_code == 200:
-                    pass
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(url_forecast) as response:
+                        if response.status == 200:
+                            pass   
+               
                 url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v0=1"
-                r = requests.get(url)
-                if r.status_code == 200:
-                    pass
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(url) as response:
+                        if response.status == 200:
+                            pass   
             else:
                 url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v0=0"
-                r = requests.get(url)            
+                async with session.get(url) as response:
+                    if response.status == 200:
+                        pass         
 
+    async def get_price(self):
+        price = await self.dam_price_processor.ibex_price()
+        url_price = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v3={float(price)}" 
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url_price) as response:
+                if response.status == 200:
+                    pass
+        
 
 
 async def main():
@@ -92,10 +111,11 @@ async def main():
         status_node = status_node_aris,
     )
     await opcua_client.setup()
+    dam_price = PriceProcessor()
     file_forecast_processor = FileManager("aris")    
     gmail_processor = ForecastProcessor()
     scheduler = AsyncIOScheduler()         
-    publisher = DataPublisher(opcua_client, file_forecast_processor)
+    publisher = DataPublisher(opcua_client, file_forecast_processor, dam_price)
     scheduler.add_job(publisher.publish_data, IntervalTrigger(minutes=1))
     scheduler.add_job(publisher.turbine_control, IntervalTrigger(minutes=1))  
     scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=11, minute=42))
