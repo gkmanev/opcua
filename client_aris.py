@@ -86,6 +86,7 @@ class DataPublisher:
 
     async def get_price(self):
         price = await self.dam_price_processor.ibex_price()
+        print(price)
         url_price = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v3={float(price)}" 
         async with aiohttp.ClientSession() as session:
             async with session.get(url_price) as response:
