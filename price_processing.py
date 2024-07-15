@@ -1,13 +1,12 @@
 import aiohttp
 import asyncio
-import logging
+
 from datetime import datetime
 from aiohttp import ClientTimeout
 from aiohttp.client_exceptions import ClientError
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+
 
 class PriceProcessor:
     async def ibex_price(self):
@@ -22,16 +21,16 @@ class PriceProcessor:
                 async with session.get(url_price) as response:
                     response.raise_for_status()  # Raise an exception for HTTP errors
                     data = await response.json()
-                    logger.info("Successfully fetched price data")
+                    print("Successfully fetched price data")
                     price = data[0].get("value", None)
                     return price
 
         except ClientError as e:
-            logger.error(f"HTTP error occurred: {e}")
+            print(f"HTTP error occurred: {e}")
         except asyncio.TimeoutError:
-            logger.error("Request timed out")
+            print("Request timed out")
         except Exception as e:
-            logger.error(f"An unexpected error occurred: {e}")
+            print(f"An unexpected error occurred: {e}")
 
         # Return None in case of any error
         return None
