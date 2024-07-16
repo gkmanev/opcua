@@ -1,5 +1,6 @@
 import asyncio
 import aiohttp
+import os
 from pathlib import Path
 from opcua_setup import OPCUAClient
 from mqtt import MQTTClient
@@ -10,14 +11,15 @@ from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.cron import CronTrigger
 from asyncua import ua
 from functools import partial
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 
 class DataPublisher:
-    def __init__(self, opcua_client, email_processor, dam_price_processor) -> None:
+    def __init__(self, opcua_client, gmail_preocessing_service, email_files_processor, dam_price_processor) -> None:
         self.opcua_client = opcua_client
-        self.email_processor = email_processor
+        self.gmail_service = gmail_preocessing_service
+        self.email_processor = email_files_processor
         self.dam_price_processor = dam_price_processor
         self.turbine_status = None       
         self.accumulate_power = 0
@@ -93,10 +95,7 @@ class DataPublisher:
                 if response.status == 200:
                     pass
 
-        
-        
-
-
+    
 async def main():
     cert_base = Path(__file__).parent    
     
@@ -118,11 +117,18 @@ async def main():
     file_forecast_processor = FileManager("aris")    
     gmail_processor = ForecastProcessor()
     scheduler = AsyncIOScheduler()         
-    publisher = DataPublisher(opcua_client, file_forecast_processor, dam_price)
+    publisher = DataPublisher(opcua_client, gmail_processor, file_forecast_processor, dam_price)
     scheduler.add_job(publisher.publish_data, IntervalTrigger(minutes=1))
     scheduler.add_job(publisher.turbine_control, IntervalTrigger(minutes=1))  
-    scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=11, minute=42))
-    scheduler.add_job(partial(gmail_processor.proceed_forecast, clearing=True), CronTrigger(hour=16, minute=30))
+    scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=10, minute=15))
+    scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=11, minute=15))
+    scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=12, minute=15))
+    scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=15, minute=3))
+
+    #scheduler.add_job(partial(gmail_processor.proceed_forecast, clearing=True), CronTrigger(hour=15, minute=0))
+    scheduler.add_job(partial(gmail_processor.proceed_forecast, clearing=True), CronTrigger(hour=16, minute=0))
+    scheduler.add_job(partial(gmail_processor.proceed_forecast, clearing=True), CronTrigger(hour=17, minute=0))
+
     scheduler.add_job(publisher.get_price, IntervalTrigger(minutes=1))  
 
 
