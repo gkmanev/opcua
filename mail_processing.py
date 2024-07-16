@@ -215,4 +215,4 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     loop.run_until_complete(processor.proceed_forecast(clearing=False))
     loop.run_until_complete(file_manager.process_files())
-    loop.run_until_complete(test.get_price())
+    

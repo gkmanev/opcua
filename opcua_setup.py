@@ -4,8 +4,8 @@ import asyncua
 from asyncua import Client as UA_Client, ua
 
 # # Setup logging
-# logging.basicConfig(level=logging.INFO)
-# _logger = logging.getLogger('asyncua')
+logging.basicConfig(level=logging.INFO)
+_logger = logging.getLogger('asyncua')
 
 
 class OPCUAClient:
@@ -24,17 +24,24 @@ class OPCUAClient:
         await self.client.load_private_key(self.private_key_path)
 
     async def read_data(self):
-        async with self.client:            
-            get_wind_node = self.client.get_node(self.wind_node)
-            wind_value = await get_wind_node.read_data_value()
-            
-            get_power_node = self.client.get_node(self.power_node)
-            power_value = await get_power_node.read_data_value()
+        try:
+            async with self.client:            
+                get_wind_node = self.client.get_node(self.wind_node)
+                wind_value = await get_wind_node.read_data_value()
+                
+                get_power_node = self.client.get_node(self.power_node)
+                power_value = await get_power_node.read_data_value()
 
-            get_status_node = self.client.get_node(self.status_node)
-            status_value = await get_status_node.read_data_value()
+                get_status_node = self.client.get_node(self.status_node)
+                status_value = await get_status_node.read_data_value()
 
-            return wind_value, power_value, status_value
+                return wind_value, power_value, status_value
+        except asyncua.ua.UaStatusCodeError as e:
+            _logger.error(f"OPC UA status code error: {e}")
+        except asyncio.CancelledError:
+            _logger.error("Task was cancelled")
+        except Exception as e:
+            _logger.error(f"An unexpected error occurred: {e}")
         
     async def send_stop_start_command(self,command):
         print("Write to OPC")
