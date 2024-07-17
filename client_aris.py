@@ -93,16 +93,16 @@ class DataPublisher:
     
 
     
-    async def turbine_control(self):
-        current_time_minute = datetime.now().minute 
-        if self.next_forecast_value:
-            if self.next_forecast_value != "NA":
-                if self.turbine_status == 2:                                      
-                        await self.opcua_client.send_stop_start_command("start")                
-            else:
-                if self.turbine_status == 3:
+    # async def turbine_control(self):
+    #     current_time_minute = datetime.now().minute 
+    #     if self.next_forecast_value:
+    #         if self.next_forecast_value != "NA":
+    #             if self.turbine_status == 2:                                      
+    #                     await self.opcua_client.send_stop_start_command("start")                
+    #         else:
+    #             if self.turbine_status == 3:
                               
-                        await self.opcua_client.send_stop_start_command("stop")
+    #                     await self.opcua_client.send_stop_start_command("stop")
 
 
     async def get_price(self):
@@ -143,7 +143,7 @@ async def main():
     scheduler = AsyncIOScheduler()         
     publisher = DataPublisher(opcua_client, gmail_processor, file_forecast_processor, dam_price)
     scheduler.add_job(publisher.publish_data, IntervalTrigger(minutes=1))
-    scheduler.add_job(publisher.turbine_control, IntervalTrigger(minutes=1))  
+    #scheduler.add_job(publisher.turbine_control, IntervalTrigger(minutes=1))  
     scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=10, minute=15))
     scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=11, minute=15))
     scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=12, minute=15))  
