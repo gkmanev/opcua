@@ -54,14 +54,23 @@ class OPCUAClient:
             # await stop_node.set_value(ua.Variant(True, ua.VariantType.Boolean))
             # #Start
             # start_node = self.client.get_node(self.start_node)
-                tag_node = self.start_node if command == 'start' else self.stop_node
-                print(f"Tag Node:{tag_node}")
-                command_node = self.client.get_node(tag_node)
-                print(f"Command Node: {command_node}")
-                _logger.info(f"{command}ing the turbine...")
-                await command_node.set_value(ua.Variant(True, ua.VariantType.Boolean))     
+                tag_node_id = self.start_node if command == 'start' else self.stop_node
+                _logger.info(f"Tag Node ID: {tag_node_id}")
+                
+                command_node = self.client.get_node(tag_node_id)
+                _logger.info(f"Command Node: {command_node}")
+                
+                # Check if command_node is valid
+                if command_node is None:
+                    raise ValueError("Command node could not be found. Node ID may be incorrect.")
+                
+                _logger.info(f"{command.capitalize()}ing the turbine...")
+                
+                # Attempt to set the value
+                await command_node.set_value(ua.Variant(True, ua.VariantType.Boolean))
+                
             except Exception as e:
-                _logger.error(f"Failed to {command} the turbine: {e}")  
+                _logger.error(f"Failed to {command} the turbine: {e}")
  
 
             
