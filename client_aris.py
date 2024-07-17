@@ -20,71 +20,91 @@ class DataPublisher:
         self.opcua_client = opcua_client
         self.gmail_service = gmail_preocessing_service
         self.email_processor = email_files_processor
-        self.dam_price_processor = dam_price_processor
-        self.turbine_status = None       
+        self.dam_price_processor = dam_price_processor        
         self.accumulate_power = 0
         self.next_forecast_value = None
+        self.turbine_status_aris = None
 
 
 
     async def publish_data(self):        
         try:
-            wind_value, power_value, turbine_status = await self.opcua_client.read_data()   
-            self.turbine_status = turbine_status.Value.Value  
-            print(f'Turbine Status: {self.turbine_status} ')
-            print(f'Wind Speed: {wind_value.Value.Value} m/s')
-            print(f'Power: {power_value.Value.Value} kW')
-            url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v5={wind_value.Value.Value}" # Aris  
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url_wind) as response:
-                    if response.status == 200:
-                        pass                       
-            
-            current_minute = datetime.now().minute      
-            if current_minute % 15 == 0:
-                self.accumulate_power = 0
-                print("Accumulate power resetting")
-            self.accumulate_power += int(power_value.Value.Value)
-            url_aris_accumulate = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v1={self.accumulate_power/60}"  # Aris  
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url_aris_accumulate) as response:
-                    if response.status == 200:
-                        pass    
-       
-            url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v4={power_value.Value.Value}"  # Aris  
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url_power) as response:
-                    if response.status == 200:
-                        pass   
-            
+
             #get_and_publish_the_forecast_data
             self.next_forecast_value = await self.email_processor.process_files()
-            print(f"FORECAST PRINT: {self.next_forecast_value}")
-            value_published_to_blynk = None
+            print(f"FORECAST PRINT: {self.next_forecast_value}")            
+            wind_value = None
+            power_value = None
+            status_value = None
             if self.next_forecast_value:
-                if self.next_forecast_value == "NA":
-                    value_published_to_blynk = 0
+                if self.next_forecast_value == "NA":                    
+                    if self.turbine_status_aris == 3:
+                        wind_value, power_value, turbine_status = await self.opcua_client.read_data(command="stop")
+                        self.turbine_status_aris = turbine_status.Value.Value
+                        print(f'Turbine Status: {status_value} ')
+                        print(f'Power: {power_value.Value.Value} kW')
+                    else:
+                        wind_value, power_value, turbine_status = await self.opcua_client.read_data()  
+                        self.turbine_status_aris = turbine_status.Value.Value                    
+                    
                 else:
+                    if self.turbine_status == 2:
+                        wind_value, power_value, turbine_status = await self.opcua_client.read_data(command="start")
+                        self.turbine_status_aris = turbine_status.Value.Value
+                        print(f'Turbine Status: {self.turbine_status} ')
+                    else:
+                        wind_value, power_value, turbine_status = await self.opcua_client.read_data()
+                        self.turbine_status_aris = turbine_status.Value.Value
+                        print(f'Turbine Status: {self.turbine_status} ')
+                        
+                
+                url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v5={wind_value.Value.Value}" # Aris
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(url_wind) as response:
+                        if response.status == 200:
+                            pass    
+
+                if self.next_forecast_value and self.next_forecast_value != "NA":
                     value_published_to_blynk = self.next_forecast_value*1000 
+                else:
+                    value_published_to_blynk = 0
                 url_forecast = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v2={value_published_to_blynk}" #V9 Neykovo V2 Aris
                 async with aiohttp.ClientSession() as session:
                     async with session.get(url_forecast) as response:
                         if response.status == 200:
                             pass      
 
-            #publish turbine status
-            if self.turbine_status == 3:  
-                url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v0=1"
+                url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v4={power_value.Value.Value}"  # Aris  
                 async with aiohttp.ClientSession() as session:
-                    async with session.get(url) as response:
+                    async with session.get(url_power) as response:
                         if response.status == 200:
-                            pass 
-            if self.turbine_status == 1:
-                url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v0=0"
+                            pass    
+
+                current_minute = datetime.now().minute      
+                if current_minute % 15 == 0:
+                    self.accumulate_power = 0
+                    print("Accumulate power resetting")
+                self.accumulate_power += int(power_value.Value.Value)
+                url_aris_accumulate = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v1={self.accumulate_power/60}"  # Aris  
                 async with aiohttp.ClientSession() as session:
+                    async with session.get(url_aris_accumulate) as response:
+                        if response.status == 200:
+                            pass  
+
+                #publish turbine status
+                if self.turbine_status_aris == 3:  
+                    url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v0=1"
+                    async with aiohttp.ClientSession() as session:
                         async with session.get(url) as response:
                             if response.status == 200:
-                                pass      
+                                pass 
+                else:
+                    url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v0=0"
+                    async with aiohttp.ClientSession() as session:
+                            async with session.get(url) as response:
+                                if response.status == 200:
+                                    pass  
+                
 
         except ua.UaStatusCodeError as e:
             print(f"OPC UA Error: {e}")
@@ -93,15 +113,15 @@ class DataPublisher:
     
 
     
-    async def turbine_control(self):
-        current_time_minute = datetime.now().minute 
-        if self.next_forecast_value:
-            if self.next_forecast_value != "NA":
-                if self.turbine_status == 2:                                      
-                        await self.opcua_client.read_data(command="start")                
-            else:
-                if self.turbine_status == 3:                              
-                        await self.opcua_client.read_data(command="stop")
+    # async def turbine_control(self):
+    #     current_time_minute = datetime.now().minute 
+    #     if self.next_forecast_value:
+    #         if self.next_forecast_value != "NA":
+    #             if self.turbine_status == 2:                                      
+    #                     await self.opcua_client.read_data(command="start")                
+    #         else:
+    #             if self.turbine_status == 3:                              
+    #                     await self.opcua_client.read_data(command="stop")
 
 
     async def get_price(self):
@@ -142,7 +162,7 @@ async def main():
     scheduler = AsyncIOScheduler()         
     publisher = DataPublisher(opcua_client, gmail_processor, file_forecast_processor, dam_price)
     scheduler.add_job(publisher.publish_data, IntervalTrigger(minutes=1))
-    scheduler.add_job(publisher.turbine_control, IntervalTrigger(minutes=1))  
+    #scheduler.add_job(publisher.turbine_control, IntervalTrigger(minutes=1))  
     scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=10, minute=15))
     scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=11, minute=15))
     scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=12, minute=15))  
