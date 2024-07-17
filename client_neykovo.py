@@ -123,8 +123,8 @@ async def main():
         wind_node = wind_node_neykovo,
         power_node = power_node_neykovo,
         status_node = status_node_neykovo,
-        start_turbine = start_node_neykovo,
-        stop_turbine = stop_node_neykovo
+        start_node = start_node_neykovo,
+        stop_node = stop_node_neykovo
     )
     await opcua_client.setup()
     email_forecast_processor = FileManager("neykovo") 
