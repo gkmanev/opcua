@@ -97,7 +97,7 @@ class DataPublisher:
         current_time_minute = datetime.now().minute 
         if self.next_forecast_value:
             if self.next_forecast_value != "NA":
-                if self.turbine_status == 1:
+                if self.turbine_status == 2:
                     #if current_time_minute % 15 == 0:                    
                     await self.opcua_client.send_stop_start_command("start")                
             else:
