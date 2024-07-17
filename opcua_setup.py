@@ -58,7 +58,7 @@ class OPCUAClient:
                 _logger.info(f"Tag Node ID: {tag_node_id}")
                 
                 # Get the node
-                command_node = self.client.get_node('ns=2;s=DA.Neykovo.WTG01.WTUR01.TurStopOp')
+                command_node = self.client.get_node(tag_node_id)
                 _logger.info(f"Command Node: {command_node}")
                 
                 # Check if command_node is valid and exists
