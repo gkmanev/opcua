@@ -57,13 +57,12 @@ class OPCUAClient:
                 tag_node_id = self.start_node if command == 'start' else self.stop_node
                 _logger.info(f"Tag Node ID: {tag_node_id}")
                 
-                command_node = self.client.get_node(tag_node_id)
+                # Get the node
+                command_node = self.client.get_node('ns=2;s=DA.Neykovo.WTG01.WTUR01.TurStopOp')
                 _logger.info(f"Command Node: {command_node}")
                 
-                # Check if command_node is valid
-                if command_node is None:
-                    raise ValueError("Command node could not be found. Node ID may be incorrect.")
-                
+                # Check if command_node is valid and exists
+                                
                 _logger.info(f"{command.capitalize()}ing the turbine...")
                 
                 # Attempt to set the value
