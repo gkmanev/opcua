@@ -40,24 +40,23 @@ class DataPublisher:
                 if self.next_forecast_value == "NA":                    
                     if self.turbine_status_aris == 3:
                         wind_value, power_value, turbine_status = await self.opcua_client.read_data(command="stop")
-                        self.turbine_status_aris = turbine_status.Value.Value
-                        print(f'Turbine Status: {status_value} ')
-                        print(f'Power: {power_value.Value.Value} kW')
+                        self.turbine_status_aris = turbine_status.Value.Value                        
                     else:
                         wind_value, power_value, turbine_status = await self.opcua_client.read_data()  
-                        self.turbine_status_aris = turbine_status.Value.Value                    
+                        self.turbine_status_aris = turbine_status.Value.Value                  
                     
                 else:
                     if self.turbine_status_aris == 2:
                         wind_value, power_value, turbine_status = await self.opcua_client.read_data(command="start")
                         self.turbine_status_aris = turbine_status.Value.Value
-                        print(f'Turbine Status: {self.turbine_status_aris} ')
+                        
                     else:
                         wind_value, power_value, turbine_status = await self.opcua_client.read_data()
                         self.turbine_status_aris = turbine_status.Value.Value
-                        print(f'Turbine Status: {self.turbine_status_aris} ')
                         
-                
+                        
+                print(f'Turbine Status: {status_value} ')
+                print(f'Power: {power_value.Value.Value} kW')
                 url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v5={wind_value.Value.Value}" # Aris
                 async with aiohttp.ClientSession() as session:
                     async with session.get(url_wind) as response:
