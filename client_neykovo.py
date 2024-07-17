@@ -59,6 +59,7 @@ class DataPublisher:
 
             #get_and_publish_the_forecast_data
             self.next_forecast_value = await self.email_processor.process_files()
+            print(f"FORECAST PRINT: {self.next_forecast_value}")
             value_published_to_blynk = None
             if self.next_forecast_value:
                 if self.next_forecast_value == "NA":
