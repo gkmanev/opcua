@@ -92,19 +92,19 @@ class DataPublisher:
             print(f"Unexpected error: {e}")
 
         
-    async def turbine_control(self):                
-        # print(f"Turbine Current Status: {self.turbine_status} || command:{next_forecast_value}")
-        current_time_minute = datetime.now().minute 
-        if self.next_forecast_value:
-            if self.next_forecast_value != "NA":
-                if self.turbine_status == 2:
-                    #if current_time_minute % 15 == 0:                    
-                    await self.opcua_client.send_stop_start_command("start")                
-            else:
-                if self.turbine_status == 3:
-                    #if current_time_minute % 15 == 0:
-                    print("HERE HERE HERE!!!")
-                    await self.opcua_client.send_stop_start_command("stop")
+    # async def turbine_control(self):                
+    #     # print(f"Turbine Current Status: {self.turbine_status} || command:{next_forecast_value}")
+    #     current_time_minute = datetime.now().minute 
+    #     if self.next_forecast_value:
+    #         if self.next_forecast_value != "NA":
+    #             if self.turbine_status == 2:
+    #                 #if current_time_minute % 15 == 0:                    
+    #                 await self.opcua_client.send_stop_start_command("start")                
+    #         else:
+    #             if self.turbine_status == 3:
+    #                 #if current_time_minute % 15 == 0:
+    #                 print("HERE HERE HERE!!!")
+    #                 await self.opcua_client.send_stop_start_command("stop")
 
 
 async def main():
@@ -136,7 +136,7 @@ async def main():
     publisher = DataPublisher(opcua_client, email_forecast_processor)
 
     scheduler.add_job(publisher.publish_data, IntervalTrigger(minutes=1))
-    scheduler.add_job(publisher.turbine_control, IntervalTrigger(minutes=1))
+    #scheduler.add_job(publisher.turbine_control, IntervalTrigger(minutes=1))
 
     scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=10, minute=15))
     scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=11, minute=15))
