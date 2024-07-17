@@ -122,7 +122,10 @@ async def main():
     url_aris = "opc.tcp://10.126.252.1:62550/DataAccessServer"
     wind_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WMET01.HorWdSpd'
     power_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.W'
-    status_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurSt'   
+    status_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurSt' 
+    #start/stop
+    start_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurStrOp'
+    stop_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurStopOp'  
     opcua_client = OPCUAClient(        
         url = url_aris,     
         client_app_uri="urn:freeopcua:client",
@@ -131,6 +134,8 @@ async def main():
         wind_node = wind_node_aris,
         power_node = power_node_aris,
         status_node = status_node_aris,
+        start_node = start_node_aris,
+        stop_node = stop_node_aris
     )
     await opcua_client.setup()
     dam_price = PriceProcessor()
