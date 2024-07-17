@@ -98,10 +98,10 @@ class DataPublisher:
         if self.next_forecast_value:
             if self.next_forecast_value != "NA":
                 if self.turbine_status == 2:                                      
-                        await self.opcua_client.send_stop_start_command("start")                
+                        await self.opcua_client.read_data(command="start")                
             else:
                 if self.turbine_status == 3:                              
-                        await self.opcua_client.send_stop_start_command("stop")
+                        await self.opcua_client.read_data(command="stop")
 
 
     async def get_price(self):

@@ -25,11 +25,10 @@ class OPCUAClient:
         await self.client.load_client_certificate(self.cert_path)
         await self.client.load_private_key(self.private_key_path)
 
-    async def read_data(self):
+    async def read_data(self, command=None):
         try:
             async with self.client:            
-                get_wind_node = self.client.get_node('ns=2;s=DA.Rakovo Aris.WTG01.WMET01.HorWdSpd')
-                print(f" PRRRRRRRRINTTTTT WIND: {get_wind_node}")
+                get_wind_node = self.client.get_node(self.wind_node)                
                 wind_value = await get_wind_node.read_data_value()
                 
                 get_power_node = self.client.get_node(self.power_node)
@@ -38,9 +37,13 @@ class OPCUAClient:
                 get_status_node = self.client.get_node(self.status_node)
                 status_value = await get_status_node.read_data_value()
                 
-
-                # stop_node = self.client.get_node('ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurStrOp')
-                # await stop_node.set_value(ua.Variant(True, ua.VariantType.Boolean))
+                if command:
+                    if command == "stop":
+                        stop_node = self.client.get_node(self.stop_node)
+                        await stop_node.set_value(ua.Variant(True, ua.VariantType.Boolean))
+                    if command == "start":
+                        start_node = self.client.get_node(self.start_node)
+                        await start_node.set_value(ua.Variant(True, ua.VariantType.Boolean))
                
 
 
@@ -52,21 +55,7 @@ class OPCUAClient:
         except Exception as e:
             _logger.error(f"An unexpected error occurred: {e}")
         
-    async def send_stop_start_command(self, command):   
-        try:
-            async with self.client:       
-                stop_node = self.client.get_node('ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurStopOp')
-                print(f"SSSSSSSSSSSSSSSSSSSTTTTTTTTTTTOP:{stop_node}")
-                await stop_node.set_value(ua.Variant(True, ua.VariantType.Boolean))
-            # await stop_node.set_value(ua.Variant(True, ua.VariantType.Boolean))
-            # #Start
-            # start_node = self.client.get_node(self.start_node)
-        except asyncua.ua.UaStatusCodeError as e:
-            _logger.error(f"OPC UA status code error: {e}")
-        except asyncio.CancelledError:
-            _logger.error("Task was cancelled")
-        except Exception as e:
-            _logger.error(f"An unexpected error occurred: {e}")
+   
               
 
             
