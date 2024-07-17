@@ -16,8 +16,8 @@ class OPCUAClient:
         self.private_key_path = private_key_path
         self.wind_node = wind_node
         self.power_node = power_node
-        self.status_node = status_node,
-        self.start_node = start_node,
+        self.status_node = status_node
+        self.start_node = start_node
         self.stop_node = stop_node
 
     async def setup(self):
@@ -33,10 +33,10 @@ class OPCUAClient:
                 
                 get_power_node = self.client.get_node(self.power_node)
                 power_value = await get_power_node.read_data_value()
-                _logger.info(f"STATUS NODE TYPE: {type(self.status_node)}")
-                # get_status_node = self.client.get_node(self.status_node)
-                # status_value = await get_status_node.read_data_value()
-                status_value = None
+                
+                get_status_node = self.client.get_node(self.status_node)
+                status_value = await get_status_node.read_data_value()
+               
 
 
                 return wind_value, power_value, status_value
@@ -64,9 +64,8 @@ class OPCUAClient:
     async def check_tourbine_status(self):
         async with self.client:          
             
-            # get_status_node = self.client.get_node(self.status_node)
-            # status_value = await get_status_node.read_data_value()
-            status_value = None
+            get_status_node = self.client.get_node(self.status_node)
+            status_value = await get_status_node.read_data_value()
             
             return status_value
             
