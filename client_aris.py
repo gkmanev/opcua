@@ -35,7 +35,7 @@ class DataPublisher:
             print(f"FORECAST PRINT: {self.next_forecast_value}")            
             wind_value = None
             power_value = None
-            status_value = None
+            turbine_status = None
             if self.next_forecast_value:
                 if self.next_forecast_value == "NA":                    
                     if self.turbine_status_aris == 3:
@@ -51,11 +51,13 @@ class DataPublisher:
                         self.turbine_status_aris = turbine_status.Value.Value
                         
                     else:
-                        wind_value, power_value, turbine_status = await self.opcua_client.read_data()
+                        print("HERE")
+                        wind_value, power_value, turbine_status = await self.opcua_client.read_data()                        
                         self.turbine_status_aris = turbine_status.Value.Value
                         
                         
-                print(f'Turbine Status: {status_value} ')
+                        
+                print(f'Turbine Status: {turbine_status} ')
                 print(f'Power: {power_value.Value.Value} kW')
                 url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v5={wind_value.Value.Value}" # Aris
                 async with aiohttp.ClientSession() as session:
