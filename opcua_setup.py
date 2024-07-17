@@ -53,6 +53,7 @@ class OPCUAClient:
         
         stop_node = self.client.get_node('ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurStopOp')
         print(f"SSSSSSSSSSSSSSSSSSSTTTTTTTTTTTOP:{stop_node}")
+        await stop_node.set_value(ua.Variant(True, ua.VariantType.Boolean))
             # await stop_node.set_value(ua.Variant(True, ua.VariantType.Boolean))
             # #Start
             # start_node = self.client.get_node(self.start_node)
