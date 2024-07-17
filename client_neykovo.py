@@ -30,12 +30,12 @@ class DataPublisher:
             self.turbine_status = turbine_status.Value.Value  
             print(f'Turbine Status: {self.turbine_status} ')
             print(f'Wind Speed: {wind_value.Value.Value} m/s')
+            print(f'Power: {power_value.Value.Value} kW')
             url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v11={wind_value.Value.Value}" # Neykovo
             async with aiohttp.ClientSession() as session:
                 async with session.get(url_wind) as response:
                     if response.status == 200:
-                        pass 
-                
+                        pass          
             
             current_minute = datetime.now().minute
             if current_minute % 15 == 0:
@@ -48,8 +48,7 @@ class DataPublisher:
             async with aiohttp.ClientSession() as session:
                 async with session.get(url_neykovo_accumulate) as response:
                     if response.status == 200:
-                        pass 
-            print(f'Power: {power_value.Value.Value} kW')
+                        pass           
 
             url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v10={power_value.Value.Value}" # Neykovo
             async with aiohttp.ClientSession() as session:

@@ -23,6 +23,7 @@ class DataPublisher:
         self.dam_price_processor = dam_price_processor
         self.turbine_status = None       
         self.accumulate_power = 0
+        self.next_forecast_value = None
 
 
 
@@ -30,15 +31,16 @@ class DataPublisher:
         try:
             wind_value, power_value, turbine_status = await self.opcua_client.read_data()   
             self.turbine_status = turbine_status.Value.Value  
+            print(f'Turbine Status: {self.turbine_status} ')
             print(f'Wind Speed: {wind_value.Value.Value} m/s')
+            print(f'Power: {power_value.Value.Value} kW')
             url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v5={wind_value.Value.Value}" # Aris  
             async with aiohttp.ClientSession() as session:
                 async with session.get(url_wind) as response:
                     if response.status == 200:
-                        pass                         
+                        pass                       
             
-            current_minute = datetime.now().minute
-      
+            current_minute = datetime.now().minute      
             if current_minute % 15 == 0:
                 self.accumulate_power = 0
                 print("Accumulate power resetting")
@@ -49,13 +51,41 @@ class DataPublisher:
                     if response.status == 200:
                         pass    
        
-            print(f'Power: {power_value.Value.Value} kW')            
-            
             url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v4={power_value.Value.Value}"  # Aris  
             async with aiohttp.ClientSession() as session:
                 async with session.get(url_power) as response:
                     if response.status == 200:
                         pass   
+            
+            #get_and_publish_the_forecast_data
+            self.next_forecast_value = await self.email_processor.process_files()
+            print(f"FORECAST PRINT: {self.next_forecast_value}")
+            value_published_to_blynk = None
+            if self.next_forecast_value:
+                if self.next_forecast_value == "NA":
+                    value_published_to_blynk = 0
+                else:
+                    value_published_to_blynk = self.next_forecast_value*1000 
+                url_forecast = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v2={value_published_to_blynk}" #V9 Neykovo V2 Aris
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(url_forecast) as response:
+                        if response.status == 200:
+                            pass      
+
+            #publish turbine status
+            if self.turbine_status == 3:  
+                url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v0=1"
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(url) as response:
+                        if response.status == 200:
+                            pass 
+            if self.turbine_status == 1:
+                url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v0=0"
+                async with aiohttp.ClientSession() as session:
+                        async with session.get(url) as response:
+                            if response.status == 200:
+                                pass      
+
         except ua.UaStatusCodeError as e:
             print(f"OPC UA Error: {e}")
         except Exception as e:
@@ -64,27 +94,17 @@ class DataPublisher:
 
     
     async def turbine_control(self):
-        next_forecast_value = await self.email_processor.process_files()        
-        print(f"Turbine Current Status: {self.turbine_status} || command:{next_forecast_value}") 
-        if next_forecast_value:
-            if next_forecast_value != "NA":      
-                converted_to_kw = float(next_forecast_value)*1000
-                url_forecast = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v2={converted_to_kw}" 
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(url_forecast) as response:
-                        if response.status == 200:
-                            pass   
-               
-                url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v0=1"
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(url) as response:
-                        if response.status == 200:
-                            pass   
+        current_time_minute = datetime.now().minute 
+        if self.next_forecast_value:
+            if self.next_forecast_value != "NA":
+                if self.turbine_status == 1:
+                    if current_time_minute % 15 == 0:                    
+                        await self.opcua_client.send_stop_start_command("start")                
             else:
-                url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v0=0"
-                async with session.get(url) as response:
-                        if response.status == 200:
-                            pass         
+                if self.turbine_status == 3:
+                    if current_time_minute % 15 == 0:
+                        await self.opcua_client.send_stop_start_command("stop")
+
 
     async def get_price(self):
         price = await self.dam_price_processor.ibex_price()
