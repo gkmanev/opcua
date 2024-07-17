@@ -88,11 +88,13 @@ class DataPublisher:
                     pass
 
     async def blynk_send_power(self):
+        print("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH")
         url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v4={self.power_aris}"  # Aris  
         async with aiohttp.ClientSession() as session:
             async with session.get(url_power) as response:
                 if response.status == 200:
                     pass   
+
     async def blynk_send_wind(self):
         url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v5={self.wind_aris}" # Aris
         async with aiohttp.ClientSession() as session:
