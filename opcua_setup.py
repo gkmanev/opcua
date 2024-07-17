@@ -28,7 +28,8 @@ class OPCUAClient:
     async def read_data(self):
         try:
             async with self.client:            
-                get_wind_node = self.client.get_node(self.wind_node)
+                get_wind_node = self.client.get_node('ns=2;s=DA.Rakovo Aris.WTG01.WMET01.HorWdSpd')
+                print(f" PRRRRRRRRINTTTTT WIND: {get_wind_node}")
                 wind_value = await get_wind_node.read_data_value()
                 
                 get_power_node = self.client.get_node(self.power_node)
@@ -48,29 +49,14 @@ class OPCUAClient:
             _logger.error(f"An unexpected error occurred: {e}")
         
     async def send_stop_start_command(self, command):
-            try:
-            # #Stop
-            # stop_node = self.client.get_node(self.stop_node)
+            
+        
+        stop_node = self.client.get_node('ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurStopOp')
+        print(f"SSSSSSSSSSSSSSSSSSSTTTTTTTTTTTOP:{stop_node}")
             # await stop_node.set_value(ua.Variant(True, ua.VariantType.Boolean))
             # #Start
             # start_node = self.client.get_node(self.start_node)
-                tag_node_id = self.start_node if command == 'start' else self.stop_node
-                _logger.info(f"Tag Node ID: {tag_node_id}")
-                
-                # Get the node
-                command_node = self.client.get_node(tag_node_id)
-                _logger.info(f"Command Node: {command_node}")
-                
-                # Check if command_node is valid and exists
-                                
-                _logger.info(f"{command.capitalize()}ing the turbine...")
-                
-                # Attempt to set the value
-                await command_node.set_value(ua.Variant(True, ua.VariantType.Boolean))
-                
-            except Exception as e:
-                _logger.error(f"Failed to {command} the turbine: {e}")
- 
+              
 
             
                   

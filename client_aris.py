@@ -101,7 +101,7 @@ class DataPublisher:
                         await self.opcua_client.send_stop_start_command("start")                
             else:
                 if self.turbine_status == 3:
-                        print("HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE")      
+                              
                         await self.opcua_client.send_stop_start_command("stop")
 
 
