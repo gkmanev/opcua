@@ -98,12 +98,13 @@ class DataPublisher:
         if self.next_forecast_value:
             if self.next_forecast_value != "NA":
                 if self.turbine_status == 1:
-                    if current_time_minute % 15 == 0:                    
-                        await self.opcua_client.send_stop_start_command("start")                
+                    #if current_time_minute % 15 == 0:                    
+                    await self.opcua_client.send_stop_start_command("start")                
             else:
                 if self.turbine_status == 3:
-                    if current_time_minute % 15 == 0:
-                        await self.opcua_client.send_stop_start_command("stop")
+                    #if current_time_minute % 15 == 0:
+                    print("HERE HERE HERE!!!")
+                    await self.opcua_client.send_stop_start_command("stop")
 
 
 async def main():
