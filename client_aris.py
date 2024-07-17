@@ -57,7 +57,7 @@ class DataPublisher:
                         
                         
                         
-                print(f'Turbine Status: {turbine_status} ')
+                print(f'Turbine Status: {self.turbine_status_aris} ')
                 print(f'Power: {power_value.Value.Value} kW')
                 url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v5={wind_value.Value.Value}" # Aris
                 async with aiohttp.ClientSession() as session:
