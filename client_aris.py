@@ -65,11 +65,11 @@ class DataPublisher:
                        
             print(f'Turbine Status: {self.turbine_status_aris} ')
             print(f'Power: {self.power_aris} kW')
-            self.blynk_send_power()
-            self.blynk_send_wind()
-            self.blynk_publish_status()
-            self.blynk_publish_accumulate()
-            self.blynk_send_forecast()
+            await self.blynk_send_power()
+            await self.blynk_send_wind()
+            await self.blynk_publish_status()
+            await self.blynk_publish_accumulate()
+            await self.blynk_send_forecast()
              
 
         except ua.UaStatusCodeError as e:
