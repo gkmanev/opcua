@@ -65,7 +65,7 @@ class DataPublisher:
                 if self.next_forecast_value == "NA":
                     value_published_to_blynk = 0
                 else:
-                    value_published_to_blynk = self.next_forecast_value          
+                    value_published_to_blynk = self.next_forecast_value*1000         
                 url_forecast = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v9={value_published_to_blynk}" #V9 Neykovo V2 Aris
                 async with aiohttp.ClientSession() as session:
                     async with session.get(url_forecast) as response:
