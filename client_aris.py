@@ -48,14 +48,14 @@ class DataPublisher:
                         self.turbine_status_aris = turbine_status.Value.Value                    
                     
                 else:
-                    if self.turbine_status == 2:
+                    if self.turbine_status_aris == 2:
                         wind_value, power_value, turbine_status = await self.opcua_client.read_data(command="start")
                         self.turbine_status_aris = turbine_status.Value.Value
-                        print(f'Turbine Status: {self.turbine_status} ')
+                        print(f'Turbine Status: {self.turbine_status_aris} ')
                     else:
                         wind_value, power_value, turbine_status = await self.opcua_client.read_data()
                         self.turbine_status_aris = turbine_status.Value.Value
-                        print(f'Turbine Status: {self.turbine_status} ')
+                        print(f'Turbine Status: {self.turbine_status_aris} ')
                         
                 
                 url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v5={wind_value.Value.Value}" # Aris
@@ -112,16 +112,6 @@ class DataPublisher:
             print(f"Unexpected error: {e}")
     
 
-    
-    # async def turbine_control(self):
-    #     current_time_minute = datetime.now().minute 
-    #     if self.next_forecast_value:
-    #         if self.next_forecast_value != "NA":
-    #             if self.turbine_status == 2:                                      
-    #                     await self.opcua_client.read_data(command="start")                
-    #         else:
-    #             if self.turbine_status == 3:                              
-    #                     await self.opcua_client.read_data(command="stop")
 
 
     async def get_price(self):
