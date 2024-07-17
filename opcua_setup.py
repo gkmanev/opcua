@@ -33,9 +33,9 @@ class OPCUAClient:
                 
                 get_power_node = self.client.get_node(self.power_node)
                 power_value = await get_power_node.read_data_value()
-
-                get_status_node = self.client.get_node(self.status_node)
-                status_value = await get_status_node.read_data_value()
+                _logger.info(f"STATUS NODE TYPE: {self.status_node}")
+                # get_status_node = self.client.get_node(self.status_node)
+                # status_value = await get_status_node.read_data_value()
                 status_value = None
 
 
