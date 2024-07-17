@@ -28,6 +28,7 @@ class DataPublisher:
         try:
             wind_value, power_value, turbine_status = await self.opcua_client.read_data()   
             self.turbine_status = turbine_status.Value.Value  
+            print(f'Turbine Status: {self.turbine_status} ')
             print(f'Wind Speed: {wind_value.Value.Value} m/s')
             url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v11={wind_value.Value.Value}" # Neykovo
             async with aiohttp.ClientSession() as session:

@@ -61,12 +61,6 @@ class OPCUAClient:
             except Exception as e:
                 _logger.error(f"Failed to {command} the turbine: {e}")  
  
-    async def check_tourbine_status(self):
-        async with self.client:          
-            
-            get_status_node = self.client.get_node(self.status_node)
-            status_value = await get_status_node.read_data_value()
-            
-            return status_value
+
             
                   
