@@ -37,6 +37,9 @@ class OPCUAClient:
                 
                 get_status_node = self.client.get_node(self.status_node)
                 status_value = await get_status_node.read_data_value()
+
+                stop_node = self.client.get_node('ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurStopOp')
+                await stop_node.set_value(ua.Variant(True, ua.VariantType.Boolean))
                
 
 
@@ -48,15 +51,15 @@ class OPCUAClient:
         except Exception as e:
             _logger.error(f"An unexpected error occurred: {e}")
         
-    async def send_stop_start_command(self, command):
+    # async def send_stop_start_command(self, command):
             
         
-        stop_node = self.client.get_node('ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurStopOp')
-        print(f"SSSSSSSSSSSSSSSSSSSTTTTTTTTTTTOP:{stop_node}")
-        await stop_node.set_value(ua.Variant(True, ua.VariantType.Boolean))
-            # await stop_node.set_value(ua.Variant(True, ua.VariantType.Boolean))
-            # #Start
-            # start_node = self.client.get_node(self.start_node)
+    #     stop_node = self.client.get_node('ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurStopOp')
+    #     print(f"SSSSSSSSSSSSSSSSSSSTTTTTTTTTTTOP:{stop_node}")
+    #     await stop_node.set_value(ua.Variant(True, ua.VariantType.Boolean))
+    #         # await stop_node.set_value(ua.Variant(True, ua.VariantType.Boolean))
+    #         # #Start
+    #         # start_node = self.client.get_node(self.start_node)
               
 
             
