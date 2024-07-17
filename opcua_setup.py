@@ -55,7 +55,9 @@ class OPCUAClient:
             # #Start
             # start_node = self.client.get_node(self.start_node)
                 tag_node = self.start_node if command == 'start' else self.stop_node
+                print(f"Tag Node:{tag_node}")
                 command_node = self.client.get_node(tag_node)
+                print(f"Command Node: {command_node}")
                 _logger.info(f"{command}ing the turbine...")
                 await command_node.set_value(ua.Variant(True, ua.VariantType.Boolean))     
             except Exception as e:
