@@ -87,8 +87,7 @@ class DataPublisher:
                 if response.status == 200:
                     pass
 
-    async def blynk_send_power(self):
-        print("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH")
+    async def blynk_send_power(self):        
         url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v4={self.power_aris}"  # Aris  
         async with aiohttp.ClientSession() as session:
             async with session.get(url_power) as response:

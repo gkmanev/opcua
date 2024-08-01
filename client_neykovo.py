@@ -15,96 +15,116 @@ import requests
 
 
 class DataPublisher:
-    def __init__(self, opcua_client, email_processor) -> None:
+    def __init__(self, opcua_client, gmail_preocessing_service, email_files_processor) -> None:
         self.opcua_client = opcua_client
-        self.email_processor = email_processor
-        self.turbine_status = None      
-        self.accumulate_power = 0 
+        self.gmail_service = gmail_preocessing_service
+        self.email_processor = email_files_processor               
+        self.accumulate_power = 0
         self.next_forecast_value = None
+        self.turbine_status_neykovo = None
+        self.power_neykovo = None
+        self.wind_neykovo = None
 
 
 
     async def publish_data(self):        
         try:
-            wind_value, power_value, turbine_status = await self.opcua_client.read_data()   
-            self.turbine_status = turbine_status.Value.Value  
-            print(f'Turbine Status: {self.turbine_status} ')
-            print(f'Wind Speed: {wind_value.Value.Value} m/s')
-            print(f'Power: {power_value.Value.Value} kW')
-            url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v11={wind_value.Value.Value}" # Neykovo
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url_wind) as response:
-                    if response.status == 200:
-                        pass          
-            
-            current_minute = datetime.now().minute
-            if current_minute % 15 == 0:
-                self.accumulate_power = 0
-                print("Accumulate resetting on every 15th min")
-            self.accumulate_power += int(power_value.Value.Value)
-            print(f"accumulated energy = {self.accumulate_power}")
-
-            url_neykovo_accumulate = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v8={self.accumulate_power/60}"  # Neykovo  
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url_neykovo_accumulate) as response:
-                    if response.status == 200:
-                        pass           
-
-            url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v10={power_value.Value.Value}" # Neykovo
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url_power) as response:
-                    if response.status == 200:
-                        pass  
-
-            #get_and_publish_the_forecast_data
             self.next_forecast_value = await self.email_processor.process_files()
             print(f"FORECAST PRINT: {self.next_forecast_value}")
-            value_published_to_blynk = None
+
             if self.next_forecast_value:
-                if self.next_forecast_value == "NA":
-                    value_published_to_blynk = 0
+                if self.next_forecast_value == "NA":                    
+                    if self.turbine_status_neykovo == 3:
+                        wind_value, power_value, turbine_status = await self.opcua_client.read_data(command="stop")
+                        self.turbine_status_neykovo = turbine_status.Value.Value 
+                        self.power_neykovo = power_value.Value.Value
+                        self.wind_neykovo = wind_value.Value.Value
+
+                    else:
+                        wind_value, power_value, turbine_status = await self.opcua_client.read_data()  
+                        self.turbine_status_neykovo = turbine_status.Value.Value  
+                        self.power_neykovo = power_value.Value.Value
+                        self.wind_neykovo = wind_value.Value.Value 
                 else:
-                    value_published_to_blynk = self.next_forecast_value*1000         
-                url_forecast = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v9={value_published_to_blynk}" #V9 Neykovo V2 Aris
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(url_forecast) as response:
-                        if response.status == 200:
-                            pass    
-            #publish turbine status
-            if self.turbine_status == 3:  
-                url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v17=1"
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(url) as response:
-                        if response.status == 200:
-                            pass 
-            if self.turbine_status == 1:
-                url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v17=0"
-                async with aiohttp.ClientSession() as session:
-                        async with session.get(url) as response:
-                            if response.status == 200:
-                                pass           
-
-
-
+                    if self.turbine_status_neykovo == 2:
+                        wind_value, power_value, turbine_status = await self.opcua_client.read_data(command="start")
+                        self.turbine_status_neykovo = turbine_status.Value.Value
+                        self.power_neykovo = power_value.Value.Value
+                        self.wind_neykovo = wind_value.Value.Value
+                        
+                    else:                        
+                        wind_value, power_value, turbine_status = await self.opcua_client.read_data()                        
+                        self.turbine_status_neykovo = turbine_status.Value.Value
+                        self.power_neykovo = power_value.Value.Value
+                        self.wind_neykovo = wind_value.Value.Value
+            
+            print(f'Turbine Status: {self.turbine_status_neykovo}')
+            print(f'Power: {self.power_neykovo} kW')
+            await self.blynk_send_power()
+            await self.blynk_send_wind()
+            await self.blynk_publish_status()
+            await self.blynk_publish_accumulate()
+            await self.blynk_send_forecast()
+        
         except ua.UaStatusCodeError as e:
             print(f"OPC UA Error: {e}")
         except Exception as e:
             print(f"Unexpected error: {e}")
 
-        
-    # async def turbine_control(self):                
-    #     # print(f"Turbine Current Status: {self.turbine_status} || command:{next_forecast_value}")
-    #     current_time_minute = datetime.now().minute 
-    #     if self.next_forecast_value:
-    #         if self.next_forecast_value != "NA":
-    #             if self.turbine_status == 2:
-    #                 #if current_time_minute % 15 == 0:                    
-    #                 await self.opcua_client.send_stop_start_command("start")                
-    #         else:
-    #             if self.turbine_status == 3:
-    #                 #if current_time_minute % 15 == 0:
-    #                 print("HERE HERE HERE!!!")
-    #                 await self.opcua_client.send_stop_start_command("stop")
+
+    async def blynk_send_power(self):        
+        url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v10={self.power_neykovo}"  # Neykovo  
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url_power) as response:
+                if response.status == 200:
+                    pass   
+    
+    async def blynk_send_wind(self):
+        url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v11={self.wind_neykovo}" # Aris
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url_wind) as response:
+                if response.status == 200:
+                    pass    
+
+    
+    async def blynk_send_forecast(self):
+        if self.next_forecast_value and self.next_forecast_value != "NA":
+            value_published_to_blynk = self.next_forecast_value*1000 
+        else:
+            value_published_to_blynk = 0
+        url_forecast = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v9={value_published_to_blynk}" #V9 Neykovo V2 Aris
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url_forecast) as response:
+                if response.status == 200:
+                    pass
+
+    async def blynk_publish_accumulate(self):
+        current_minute = datetime.now().minute      
+        if current_minute % 15 == 0:
+            self.accumulate_power = 0            
+        self.accumulate_power += int(self.power_neykovo)
+        url_neykovo_accumulate = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v8={self.accumulate_power/60}"  # Neykovo  
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url_neykovo_accumulate) as response:
+                if response.status == 200:
+                    pass  
+
+    async def blynk_publish_status(self):
+        #publish turbine status
+        if self.turbine_status_neykovo == 3:  
+            url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v17=1"
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as response:
+                    if response.status == 200:
+                        pass 
+        else:
+            url = "https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v17=0"
+            async with aiohttp.ClientSession() as session:
+                    async with session.get(url) as response:
+                        if response.status == 200:
+                            pass  
+
+
 
 
 async def main():
@@ -129,14 +149,13 @@ async def main():
         stop_node = stop_node_neykovo
     )
     await opcua_client.setup()
-    email_forecast_processor = FileManager("neykovo") 
+    file_forecast_processor = FileManager("neykovo") 
     gmail_processor = ForecastProcessor()   
-    scheduler = AsyncIOScheduler() 
-    
-    publisher = DataPublisher(opcua_client, email_forecast_processor)
+    scheduler = AsyncIOScheduler()    
+    publisher = DataPublisher(opcua_client, gmail_processor, file_forecast_processor)
 
     scheduler.add_job(publisher.publish_data, IntervalTrigger(minutes=1))
-    #scheduler.add_job(publisher.turbine_control, IntervalTrigger(minutes=1))
+    
 
     scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=10, minute=15))
     scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=11, minute=15))
