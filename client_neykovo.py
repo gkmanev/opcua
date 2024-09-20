@@ -80,7 +80,7 @@ class DataPublisher:
                     pass   
     
     async def blynk_send_wind(self):
-        url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v11={self.wind_neykovo}" # Aris
+        url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v11={self.wind_neykovo}" # Neykovo
         async with aiohttp.ClientSession() as session:
             async with session.get(url_wind) as response:
                 if response.status == 200:

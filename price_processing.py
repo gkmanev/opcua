@@ -1,7 +1,7 @@
 import aiohttp
 import asyncio
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from aiohttp import ClientTimeout
 from aiohttp.client_exceptions import ClientError
 
@@ -11,7 +11,7 @@ from aiohttp.client_exceptions import ClientError
 class PriceProcessor:
     async def ibex_price(self):
         try:
-            now = datetime.now()
+            now = datetime.now() - timedelta(hours=1)
             now = now.replace(minute=0, second=0, microsecond=0)
             formatted_time = now.strftime('%Y-%m-%dT%H:%M:%SZ')
             url_price = f"http://85.14.6.37:16455/api/price/?timestamp=&start_date={formatted_time}&end_date={formatted_time}"
