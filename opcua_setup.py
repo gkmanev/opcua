@@ -28,7 +28,8 @@ class OPCUAClient:
     async def read_data(self, command=None):
         try:
             async with self.client:            
-                get_wind_node = self.client.get_node(self.wind_node)                
+                get_wind_node = self.client.get_node(self.wind_node)  
+                print(f"WIND NODE SUCCESS: {get_wind_node}")              
                 wind_value = await get_wind_node.read_data_value()
                 
                 get_power_node = self.client.get_node(self.power_node)
