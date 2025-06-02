@@ -152,8 +152,8 @@ async def main():
     opcua_client = OPCUAClient(        
         url = url_aris,     
         client_app_uri="urn:freeopcua:client",
-        cert_path=cert_base / "my_cert.pem",
-        private_key_path=cert_base / "my_private_key.pem",
+        cert_path=cert_base / "my_cert_last.pem",
+        private_key_path=cert_base / "my_private_key_last.pem",
         wind_node = wind_node_aris,
         power_node = power_node_aris,
         status_node = status_node_aris,
