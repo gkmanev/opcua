@@ -16,4 +16,6 @@ venv.bak/
 /opcua_client_venv
 my_cert.pem
 my_private_key.pem
+my_cert_last.pem
+my_private_key_last.pem
 /trusted
