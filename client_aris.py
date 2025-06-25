@@ -13,9 +13,8 @@ from asyncua import ua
 from functools import partial
 from datetime import datetime, timedelta
 # modbus tcp:
-from pymodbus.server import ServerContext
+from pymodbus.datastore import ModbusSequentialDataBlock, ModbusSlaveContext, ModbusServerContext
 from pymodbus.server.async_io import ModbusTcpServer
-from pymodbus.datastore import ModbusServerContext, ModbusSlaveContext, ModbusSequentialDataBlock
 
 
 
@@ -159,10 +158,13 @@ async def main():
     cert_base = Path(__file__).parent    
     #Modbus TCP:
     store = ModbusSlaveContext(
+        di=ModbusSequentialDataBlock(0, [0]*100),
+        co=ModbusSequentialDataBlock(0, [0]*100),
         hr=ModbusSequentialDataBlock(0, [0]*100),
         ir=ModbusSequentialDataBlock(0, [0]*100),
+        zero_mode=True
     )
-    context = ModbusServerContext(slaves=store, single=True)
+    context = ModbusServerContext(slaves={0x00: store}, single=False)
     
 
     url_aris = "opc.tcp://10.126.252.1:62550/DataAccessServer"
