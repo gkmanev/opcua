@@ -12,11 +12,15 @@ from apscheduler.triggers.cron import CronTrigger
 from asyncua import ua
 from functools import partial
 from datetime import datetime, timedelta
+# modbus tcp:
+from pymodbus.server.async_io import StartTcpServer
+from pymodbus.datastore import ModbusServerContext, ModbusSlaveContext, ModbusSequentialDataBlock
+
 
 
 
 class DataPublisher:
-    def __init__(self, opcua_client, gmail_preocessing_service, email_files_processor, dam_price_processor) -> None:
+    def __init__(self, opcua_client, gmail_preocessing_service, email_files_processor, dam_price_processor, context) -> None:
         self.opcua_client = opcua_client
         self.gmail_service = gmail_preocessing_service
         self.email_processor = email_files_processor
@@ -26,6 +30,13 @@ class DataPublisher:
         self.turbine_status_aris = None
         self.power_aris = None
         self.wind_aris = None
+        self.context = context
+        asyncio.create_task(self.init_modbus_server())
+        
+
+    
+    async def init_modbus_server(self):
+        await StartTcpServer(self.context, address=("0.0.0.0", 5020))
 
 
 
@@ -65,6 +76,9 @@ class DataPublisher:
                        
             print(f'Turbine Status: {self.turbine_status_aris} ')
             print(f'Power: {self.power_aris} kW')
+
+            self.context[0x00].setValues(3, 0, [int(self.power_aris), int(self.wind_aris)])
+
             await self.blynk_send_power()
             await self.blynk_send_wind()
             await self.blynk_publish_status()
@@ -141,7 +155,14 @@ class DataPublisher:
     
 async def main():
     cert_base = Path(__file__).parent    
+    #Modbus TCP:
+    store = ModbusSlaveContext(
+        hr=ModbusSequentialDataBlock(0, [0]*100),
+        ir=ModbusSequentialDataBlock(0, [0]*100),
+    )
+    context = ModbusServerContext(slaves=store, single=True)
     
+
     url_aris = "opc.tcp://10.126.252.1:62550/DataAccessServer"
     wind_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WMET01.HorWdSpd'
     power_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.W'
@@ -165,7 +186,8 @@ async def main():
     file_forecast_processor = FileManager("aris")    
     gmail_processor = ForecastProcessor()
     scheduler = AsyncIOScheduler()         
-    publisher = DataPublisher(opcua_client, gmail_processor, file_forecast_processor, dam_price)
+    publisher = DataPublisher(opcua_client, gmail_processor, file_forecast_processor, dam_price, context)
+    
     scheduler.add_job(publisher.publish_data, IntervalTrigger(minutes=1))
     #scheduler.add_job(publisher.turbine_control, IntervalTrigger(minutes=1))  
     scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=10, minute=15))
