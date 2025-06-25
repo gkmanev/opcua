@@ -13,7 +13,8 @@ from asyncua import ua
 from functools import partial
 from datetime import datetime, timedelta
 # modbus tcp:
-from pymodbus.server.async_io import StartTcpServer
+from pymodbus.server import ServerContext
+from pymodbus.server.async_io import ModbusTcpServer
 from pymodbus.datastore import ModbusServerContext, ModbusSlaveContext, ModbusSequentialDataBlock
 
 
@@ -31,12 +32,13 @@ class DataPublisher:
         self.power_aris = None
         self.wind_aris = None
         self.context = context
-        asyncio.create_task(self.init_modbus_server())
+        
         
 
     
     async def init_modbus_server(self):
-        await StartTcpServer(self.context, address=("0.0.0.0", 5020))
+        server = ModbusTcpServer(self.context, address=("0.0.0.0", 5020))
+        await server.serve_forever()
 
 
 
@@ -187,7 +189,7 @@ async def main():
     gmail_processor = ForecastProcessor()
     scheduler = AsyncIOScheduler()         
     publisher = DataPublisher(opcua_client, gmail_processor, file_forecast_processor, dam_price, context)
-    
+    asyncio.create_task(publisher.init_modbus_server())
     scheduler.add_job(publisher.publish_data, IntervalTrigger(minutes=1))
     #scheduler.add_job(publisher.turbine_control, IntervalTrigger(minutes=1))  
     scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=10, minute=15))
