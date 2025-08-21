@@ -78,7 +78,18 @@ class DataPublisher:
             print(f'Turbine Status: {self.turbine_status_aris} ')
             print(f'Power: {self.power_aris} kW')
 
-            self.context[0x00].setValues(3, 0, [int(self.power_aris), int(self.wind_aris)])
+            # Handle negative values - set to 0 if negative, ensure within 16-bit range
+            power_safe = max(0, min(65535, int(self.power_aris))) if self.power_aris is not None else 0
+            wind_safe = max(0, min(65535, int(self.wind_aris))) if self.wind_aris is not None else 0
+            
+            # Optional: Log when values are clamped
+            if self.power_aris is not None and int(self.power_aris) != power_safe:
+                print(f"Power value adjusted: {int(self.power_aris)} -> {power_safe}")
+            if self.wind_aris is not None and int(self.wind_aris) != wind_safe:
+                print(f"Wind value adjusted: {int(self.wind_aris)} -> {wind_safe}")
+
+            # Write safe values to Modbus registers
+            self.context[0x00].setValues(3, 0, [power_safe, wind_safe])
 
             await self.blynk_send_power()
             await self.blynk_send_wind()
