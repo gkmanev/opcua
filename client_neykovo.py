@@ -10,12 +10,13 @@ from apscheduler.triggers.cron import CronTrigger
 from asyncua import ua
 from functools import partial
 from datetime import datetime
-
 import requests
+from pymodbus.datastore import ModbusSequentialDataBlock, ModbusSlaveContext, ModbusServerContext
+from pymodbus.server.async_io import ModbusTcpServer
 
 
 class DataPublisher:
-    def __init__(self, opcua_client, gmail_preocessing_service, email_files_processor) -> None:
+    def __init__(self, opcua_client, gmail_preocessing_service, email_files_processor, context) -> None:
         self.opcua_client = opcua_client
         self.gmail_service = gmail_preocessing_service
         self.email_processor = email_files_processor               
@@ -24,6 +25,12 @@ class DataPublisher:
         self.turbine_status_neykovo = None
         self.power_neykovo = None
         self.wind_neykovo = None
+        self.context = context
+
+
+    async def init_modbus_server(self):
+        server = ModbusTcpServer(self.context, address=("0.0.0.0", 5020))
+        await server.serve_forever()
 
 
 
@@ -60,6 +67,20 @@ class DataPublisher:
             
             print(f'Turbine Status: {self.turbine_status_neykovo}')
             print(f'Power: {self.power_neykovo} kW')
+
+            # Handle negative values - set to 0 if negative, ensure within 16-bit range
+            power_safe = max(0, min(65535, int(self.power_neykovo))) if self.power_neykovo is not None else 0
+            wind_safe = max(0, min(65535, int(self.wind_neykovo))) if self.wind_neykovo is not None else 0
+            
+            # Optional: Log when values are clamped
+            if self.power_neykovo is not None and int(self.power_neykovo) != power_safe:
+                print(f"Power value adjusted: {int(self.power_neykovo)} -> {power_safe}")
+            if self.wind_aris is not None and int(self.wind_neykovo) != wind_safe:
+                print(f"Wind value adjusted: {int(self.wind_neykovo)} -> {wind_safe}")
+
+            # Write safe values to Modbus registers
+            self.context[0x00].setValues(3, 0, [power_safe, wind_safe])
+
             await self.blynk_send_power()
             await self.blynk_send_wind()
             await self.blynk_publish_status()
@@ -128,7 +149,17 @@ class DataPublisher:
 
 
 async def main():
-    cert_base = Path(__file__).parent    
+    cert_base = Path(__file__).parent   
+
+    #Modbus TCP:
+    store = ModbusSlaveContext(
+        di=ModbusSequentialDataBlock(0, [0]*100),
+        co=ModbusSequentialDataBlock(0, [0]*100),
+        hr=ModbusSequentialDataBlock(0, [0]*100),
+        ir=ModbusSequentialDataBlock(0, [0]*100),
+        zero_mode=True
+    )
+    context = ModbusServerContext(slaves={0x00: store}, single=False) 
 
     url_power = "opc.tcp://10.126.253.1:62550/DataAccessServer"    
     wind_node_neykovo = 'ns=2;s=DA.Neykovo.WTG01.WMET01.HorWdSpd'    
@@ -152,7 +183,8 @@ async def main():
     file_forecast_processor = FileManager("neykovo") 
     gmail_processor = ForecastProcessor()   
     scheduler = AsyncIOScheduler()    
-    publisher = DataPublisher(opcua_client, gmail_processor, file_forecast_processor)
+    publisher = DataPublisher(opcua_client, gmail_processor, file_forecast_processor, context)
+    asyncio.create_task(publisher.init_modbus_server())
 
     scheduler.add_job(publisher.publish_data, IntervalTrigger(minutes=1))
     
