@@ -75,7 +75,7 @@ class DataPublisher:
             # Optional: Log when values are clamped
             if self.power_neykovo is not None and int(self.power_neykovo) != power_safe:
                 print(f"Power value adjusted: {int(self.power_neykovo)} -> {power_safe}")
-            if self.wind_aris is not None and int(self.wind_neykovo) != wind_safe:
+            if self.wind_neykovo is not None and int(self.wind_neykovo) != wind_safe:
                 print(f"Wind value adjusted: {int(self.wind_neykovo)} -> {wind_safe}")
 
             # Write safe values to Modbus registers
@@ -113,7 +113,7 @@ class DataPublisher:
             value_published_to_blynk = self.next_forecast_value*1000 
         else:
             value_published_to_blynk = 0
-        url_forecast = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v9={value_published_to_blynk}" #V9 Neykovo V2 Aris
+        url_forecast = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v9={value_published_to_blynk}" #V9 Neykovo V2 Neykovo
         async with aiohttp.ClientSession() as session:
             async with session.get(url_forecast) as response:
                 if response.status == 200:
