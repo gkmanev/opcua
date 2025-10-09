@@ -68,8 +68,7 @@ class DataPublisher:
                         wind_value, power_value, turbine_status = await self.opcua_client.read_data()
                         self.power_neykovo = power_value.Value.Value
                         self.wind_neykovo = wind_value.Value.Value 
-                        if to_num(self.wind_neykovo) >= 5 and to_num(self.power_neykovo) > 1:   
-                            await self.send_warning_email()                                         
+                        if to_num(self.wind_neykovo) >= 5 and to_num(self.power_neykovo) > 1:                                                                
                             self.is_email_send = False
                         
                         if (self.wind_neykovo is not None and int(self.wind_neykovo) > 5 and self.power_neykovo is not None and int(self.power_neykovo) <= 1) or (
