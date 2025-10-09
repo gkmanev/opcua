@@ -16,7 +16,7 @@ from pymodbus.server.async_io import ModbusTcpServer
 
 
 class DataPublisher:
-    def __init__(self, opcua_client, gmail_preocessing_service, email_files_processor, context) -> None:
+    def __init__(self, opcua_client, gmail_preocessing_service, email_files_processor, context, gmail_service) -> None:
         self.opcua_client = opcua_client
         self.gmail_service = gmail_preocessing_service
         self.email_processor = email_files_processor               
@@ -26,6 +26,8 @@ class DataPublisher:
         self.power_neykovo = None
         self.wind_neykovo = None
         self.context = context
+        self.gmail_service = gmail_service
+        self.is_email_send = False
 
 
     async def init_modbus_server(self):
@@ -34,8 +36,16 @@ class DataPublisher:
 
 
 
-    async def publish_data(self):        
-        try:
+    async def publish_data(self):   
+        
+        def to_num(x):
+            try:
+                # handle strings like "5.2" too
+                return float(x)
+            except (TypeError, ValueError):
+                return None      
+                
+        try:            
             self.next_forecast_value = await self.email_processor.process_files()
             print(f"FORECAST PRINT: {self.next_forecast_value}")
 
@@ -53,11 +63,36 @@ class DataPublisher:
                         self.power_neykovo = power_value.Value.Value
                         self.wind_neykovo = wind_value.Value.Value 
                 else:
-                    if self.turbine_status_neykovo == 2:
+                    
+                    if self.turbine_status_neykovo == 3:
+                        wind_value, power_value, turbine_status = await self.opcua_client.read_data()
+                        self.power_neykovo = power_value.Value.Value
+                        self.wind_neykovo = wind_value.Value.Value 
+                        if to_num(self.wind_neykovo) >= 5 and to_num(self.power_neykovo) > 1:                                            
+                            self.is_email_send = False
+                        
+                        if (self.wind_neykovo is not None and int(self.wind_neykovo) > 5 and self.power_neykovo is not None and int(self.power_neykovo) <= 1) or (
+                            self.wind_neykovo is not None and int(self.wind_neykovo) > 5 and self.power_neykovo is None
+                        ):                         
+                            if self.is_email_send == False:
+                                await self.send_warning_email()
+                                self.is_email_send = True
+                        if self.wind_neykovo is None or self.power_neykovo is None:
+                            if self.is_email_send == False:
+                                await self.send_warning_email()
+                                self.is_email_send = True
+
+
+
+                    elif self.turbine_status_neykovo == 2:
                         wind_value, power_value, turbine_status = await self.opcua_client.read_data(command="start")
                         self.turbine_status_neykovo = turbine_status.Value.Value
                         self.power_neykovo = power_value.Value.Value
                         self.wind_neykovo = wind_value.Value.Value
+
+                    elif self.turbine_status_neykovo == 1:
+                        await self.send_warning_email()
+                        self.is_email_send = True
                         
                     else:                        
                         wind_value, power_value, turbine_status = await self.opcua_client.read_data()                        
@@ -66,7 +101,8 @@ class DataPublisher:
                         self.wind_neykovo = wind_value.Value.Value
             
             print(f'Turbine Status: {self.turbine_status_neykovo}')
-            print(f'Power: {self.power_neykovo} kW')
+            print(f'Power Neykovo: {self.power_neykovo} kW')
+            print(f'Wind Neykovo: {self.wind_neykovo} m/s')
 
             # Handle negative values - set to 0 if negative, ensure within 16-bit range
             power_safe = max(0, min(65535, int(self.power_neykovo))) if self.power_neykovo is not None else 0
@@ -144,6 +180,16 @@ class DataPublisher:
                     async with session.get(url) as response:
                         if response.status == 200:
                             pass  
+    
+    async def send_warning_email(self):
+        await self.gmail_service.email_georgi(
+            subject="Warning Power Tourbine Error",
+            body_text="Power Tourbine Problem !!!!!!",
+        )
+        await self.gmail_service.email_rali(
+            subject="Warning Power Tourbine Error",
+            body_text="Power Tourbine Problem !!!!!!",
+        )
 
 
 
@@ -180,10 +226,11 @@ async def main():
         stop_node = stop_node_neykovo
     )
     await opcua_client.setup()
+    gmail_service = GmailService()
     file_forecast_processor = FileManager("neykovo") 
     gmail_processor = ForecastProcessor()   
     scheduler = AsyncIOScheduler()    
-    publisher = DataPublisher(opcua_client, gmail_processor, file_forecast_processor, context)
+    publisher = DataPublisher(opcua_client, gmail_processor, file_forecast_processor, context, gmail_service)
     asyncio.create_task(publisher.init_modbus_server())
 
     scheduler.add_job(publisher.publish_data, IntervalTrigger(minutes=1))
