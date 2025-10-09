@@ -167,7 +167,7 @@ class DataPublisher:
     
     async def send_warning_email(self):
         await self.gmail_service.email_georgi(
-            subject="Test message from Aris",
+            subject="Warning test message from Aris",
             body_text="testing...",
         )
 
