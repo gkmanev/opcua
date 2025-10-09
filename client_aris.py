@@ -68,13 +68,12 @@ class DataPublisher:
                         self.power_aris = power_value.Value.Value
                         self.wind_aris = wind_value.Value.Value                
                     
-                else:
-                    
+                else:                    
                     if self.turbine_status_aris == 3:
                         wind_value, power_value, turbine_status = await self.opcua_client.read_data() 
                         self.power_aris = power_value.Value.Value
                         self.wind_aris = wind_value.Value.Value
-                        if to_num(self.wind_aris) > 5 and to_num(self.power_aris) > 1:
+                        if to_num(self.wind_aris) >= 5 and to_num(self.power_aris) > 1:
                             print("HERE in The Statement!!!!")                            
                             self.is_email_send = False
 
