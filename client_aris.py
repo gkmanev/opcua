@@ -109,7 +109,9 @@ class DataPublisher:
                         
                        
             print(f'Turbine Status: {self.turbine_status_aris} ')
-            print(f'Power: {self.power_aris} kW')
+            print(f'Power Aris: {to_num(self.power_aris)} kW')
+            print(f'Wind Aris: {to_num(self.wind_aris)} m/s')
+
 
             # Handle negative values - set to 0 if negative, ensure within 16-bit range
             power_safe = max(0, min(65535, int(self.power_aris))) if self.power_aris is not None else 0
