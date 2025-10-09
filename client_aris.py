@@ -76,6 +76,7 @@ class DataPublisher:
                         self.wind_aris = wind_value.Value.Value
                         if to_num(self.wind_aris) > 5 and to_num(self.power_aris) > 1:
                             print("HERE in The Statement!!!!")
+                            await self.send_warning_email()
                             self.is_email_send = False
 
                         if (self.wind_aris is not None and int(self.wind_aris) > 5 and self.power_aris is not None and int(self.power_aris) <= 1) or (
