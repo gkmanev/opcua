@@ -6,6 +6,6 @@ result = client.read_holding_registers(address=0, count=2, slave=0)
 if result.isError():
     print(f"Error reading registers: {result}")
 else:
-    print(result.registers)
+    print(type(result.registers))
 client.close()
 

@@ -1,10 +1,10 @@
 import asyncio
 import aiofiles
-
-import aiohttp
-
-from datetime import datetime, date, timedelta
 import pandas as pd
+import aiohttp
+from base64 import urlsafe_b64encode
+from datetime import datetime, date, timedelta
+from googleapiclient.errors import HttpError
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.oauth2.credentials import Credentials
@@ -20,7 +20,10 @@ import os
 import xlrd
 import pytz
 
-SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
+SCOPES = [
+    "https://www.googleapis.com/auth/gmail.readonly", 
+    "https://www.googleapis.com/auth/gmail.send",
+]
 
 class GmailService:
     def __init__(self, token_file="token.json", credentials_file="credentials.json"):
@@ -48,6 +51,48 @@ class GmailService:
             result = self.service.users().messages().list(userId='me', q=query, pageToken=page_token).execute()
             messages.extend(result.get('messages', []))
         return messages
+    
+    # Send email
+    def _build_simple_message(self, to: str, subject: str, body_text: str = "", body_html: str = None) -> dict:
+        """Builds a simple Gmail message (text or HTML, no attachments)."""
+        if body_html:
+            msg = MIMEMultipart("alternative")
+            msg.attach(MIMEText(body_text or "", "plain", "utf-8"))
+            msg.attach(MIMEText(body_html, "html", "utf-8"))
+        else:
+            msg = MIMEText(body_text or "", "plain", "utf-8")
+
+        msg["To"] = to
+        msg["Subject"] = subject
+        raw_message = urlsafe_b64encode(msg.as_bytes()).decode("utf-8")
+        return {"raw": raw_message}
+
+    def send_email(self, to: str, subject: str, body_text: str = "", body_html: str = None):
+        """Send an email (synchronously)."""
+        message = self._build_simple_message(to, subject, body_text, body_html)
+        try:
+            return (
+                self.service.users()
+                .messages()
+                .send(userId="me", body=message)
+                .execute()
+            )
+        except HttpError as e:
+            raise RuntimeError(f"Gmail send failed: {e}") from e
+        
+    async def send_email_async(self, to: str, subject: str, body_text: str = "", body_html: str = None):
+        """Async wrapper to send emails without blocking the event loop."""
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(None, lambda: self.send_email(to, subject, body_text, body_html))
+
+    async def email_georgi(self, subject: str, body_text: str = "", body_html: str = None):
+        """Convenience method to email georgi.manev@entra.energy."""
+        return await self.send_email_async(
+            to="georgi.manev@entra.energy",
+            subject=subject,
+            body_text=body_text,
+            body_html=body_html,
+        )
 
     async def parse_parts(self, service, parts, folder_name, message):
         if parts:

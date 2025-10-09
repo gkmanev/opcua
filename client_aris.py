@@ -20,7 +20,7 @@ from pymodbus.server.async_io import ModbusTcpServer
 
 
 class DataPublisher:
-    def __init__(self, opcua_client, gmail_preocessing_service, email_files_processor, dam_price_processor, context) -> None:
+    def __init__(self, opcua_client, gmail_preocessing_service, email_files_processor, dam_price_processor, context, gmail_service) -> None:
         self.opcua_client = opcua_client
         self.gmail_service = gmail_preocessing_service
         self.email_processor = email_files_processor
@@ -31,7 +31,7 @@ class DataPublisher:
         self.power_aris = None
         self.wind_aris = None
         self.context = context
-        
+        self.gmail_service = gmail_service
         
 
     
@@ -96,6 +96,7 @@ class DataPublisher:
             await self.blynk_publish_status()
             await self.blynk_publish_accumulate()
             await self.blynk_send_forecast()
+            await self.send_warning_email()
              
 
         except ua.UaStatusCodeError as e:
@@ -163,6 +164,13 @@ class DataPublisher:
                     async with session.get(url) as response:
                         if response.status == 200:
                             pass  
+    
+    async def send_warning_email(self):
+        await self.gmail_service.email_georgi(
+            subject="Test message from Aris",
+            body_text="testing...",
+        )
+
 
     
 async def main():
@@ -197,11 +205,12 @@ async def main():
         stop_node = stop_node_aris
     )
     await opcua_client.setup()
+    gmail_service = GmailService()
     dam_price = PriceProcessor()
     file_forecast_processor = FileManager("aris")    
     gmail_processor = ForecastProcessor()
     scheduler = AsyncIOScheduler()         
-    publisher = DataPublisher(opcua_client, gmail_processor, file_forecast_processor, dam_price, context)
+    publisher = DataPublisher(opcua_client, gmail_processor, file_forecast_processor, dam_price, context, gmail_service)
     asyncio.create_task(publisher.init_modbus_server())
     scheduler.add_job(publisher.publish_data, IntervalTrigger(minutes=1))
     #scheduler.add_job(publisher.turbine_control, IntervalTrigger(minutes=1))  
