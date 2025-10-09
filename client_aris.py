@@ -206,6 +206,10 @@ class DataPublisher:
             subject="Warning Aris Error",
             body_text="Aris Problem !!!!!!",
         )
+        await self.gmail_service.email_rali(
+            subject="Warning Aris Error",
+            body_text="Aris Problem !!!!!!",
+        )
 
 
     

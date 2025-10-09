@@ -94,8 +94,8 @@ class GmailService:
             body_html=body_html,
         )
     
-    async def email_georgi(self, subject: str, body_text: str = "", body_html: str = None):
-        """Convenience method to email georgi.manev@entra.energy."""
+    async def email_rali(self, subject: str, body_text: str = "", body_html: str = None):
+        """Convenience method to email ralitsa.rumenova@entra.energy."""
         return await self.send_email_async(
             to="ralitsa.rumenova@entra.energy",
             subject=subject,
