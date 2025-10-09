@@ -93,6 +93,15 @@ class GmailService:
             body_text=body_text,
             body_html=body_html,
         )
+    
+    async def email_georgi(self, subject: str, body_text: str = "", body_html: str = None):
+        """Convenience method to email georgi.manev@entra.energy."""
+        return await self.send_email_async(
+            to="ralitsa.rumenova@entra.energy",
+            subject=subject,
+            body_text=body_text,
+            body_html=body_html,
+        )
 
     async def parse_parts(self, service, parts, folder_name, message):
         if parts:
