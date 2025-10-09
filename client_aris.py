@@ -32,6 +32,7 @@ class DataPublisher:
         self.wind_aris = None
         self.context = context
         self.gmail_service = gmail_service
+        self.is_email_send = False
         
 
     
@@ -41,12 +42,19 @@ class DataPublisher:
 
 
 
-    async def publish_data(self):        
+    async def publish_data(self):   
+        def to_num(x):
+            try:
+                # handle strings like "5.2" too
+                return float(x)
+            except (TypeError, ValueError):
+                return None     
         try:            
             self.next_forecast_value = await self.email_processor.process_files()
             print(f"FORECAST PRINT: {self.next_forecast_value}")
 
             if self.next_forecast_value:
+
                 if self.next_forecast_value == "NA":                    
                     if self.turbine_status_aris == 3:
                         wind_value, power_value, turbine_status = await self.opcua_client.read_data(command="stop")
@@ -61,11 +69,36 @@ class DataPublisher:
                         self.wind_aris = wind_value.Value.Value                
                     
                 else:
-                    if self.turbine_status_aris == 2:
+                    
+                    if self.turbine_status_aris == 3:
+                        wind_value, power_value, turbine_status = await self.opcua_client.read_data() 
+                        self.power_aris = power_value.Value.Value
+                        self.wind_aris = wind_value.Value.Value
+                        if to_num(self.wind_aris) > 5 and to_num(self.power_aris) > 1:
+                            self.is_email_send = False
+
+                        if (self.wind_aris is not None and int(self.wind_aris) > 5 and self.power_aris is not None and int(self.power_aris) <= 1) or (
+                            self.wind_aris is not None and int(self.wind_aris) > 5 and self.power_aris is None
+                        ):                         
+                            if self.is_email_send == False:
+                                await self.send_warning_email()
+                                self.is_email_send = True
+                        if self.wind_aris is None or self.power_aris is None:
+                            if self.is_email_send == False:
+                                await self.send_warning_email()
+                                self.is_email_send = True
+
+
+                    elif self.turbine_status_aris == 2:
                         wind_value, power_value, turbine_status = await self.opcua_client.read_data(command="start")
                         self.turbine_status_aris = turbine_status.Value.Value
                         self.power_aris = power_value.Value.Value
                         self.wind_aris = wind_value.Value.Value
+                    
+                    elif self.turbine_status_aris == 1:
+                        await self.send_warning_email()
+                        self.is_email_send = True
+
                         
                     else:                        
                         wind_value, power_value, turbine_status = await self.opcua_client.read_data()                        
@@ -96,7 +129,7 @@ class DataPublisher:
             await self.blynk_publish_status()
             await self.blynk_publish_accumulate()
             await self.blynk_send_forecast()
-            await self.send_warning_email()
+            
              
 
         except ua.UaStatusCodeError as e:
