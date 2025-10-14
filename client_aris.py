@@ -58,7 +58,7 @@ class DataPublisher:
             self.wind_aris = wind_value.Value.Value
             print(f'Turbine Status: {self.turbine_status_aris} ')
             print(f'Power Aris: {to_num(self.power_aris)} kW')
-            print(f'Wind Aris: {to_num(self.wind_aris)} m/s')
+            print(f'Wind Aris: {to_num(self.wind_aris)} m/s') 
 
             if self.next_forecast_value:
 
@@ -240,7 +240,7 @@ async def main():
     stop_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurStopOp'  
     opcua_client = OPCUAClient(        
         url = url_aris,     
-        client_app_uri="urn:freeopcua:client",
+        client_app_uri="urn:freeopcua:client", # Aris
         cert_path=cert_base / "my_cert_last.pem",
         private_key_path=cert_base / "my_private_key_last.pem",
         wind_node = wind_node_aris,
