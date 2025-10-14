@@ -216,7 +216,7 @@ async def main():
     stop_node_neykovo = 'ns=2;s=DA.Neykovo.WTG01.WTUR01.TurStopOp'
     opcua_client = OPCUAClient(        
         url = url_power,     
-        client_app_uri="urn:freeopcua:client",
+        client_app_uri="urn:example.org:FreeOpcUa:python-opcua",
         cert_path=cert_base / "my_cert_last.pem",
         private_key_path=cert_base / "my_private_key_last.pem",
         wind_node = wind_node_neykovo,
