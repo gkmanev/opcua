@@ -48,6 +48,13 @@ class DataPublisher:
         try:            
             self.next_forecast_value = await self.email_processor.process_files()
             print(f"FORECAST PRINT: {self.next_forecast_value}")
+            wind_value, power_value, turbine_status = await self.opcua_client.read_data(command="stop")
+            self.turbine_status_neykovo = turbine_status.Value.Value 
+            self.power_neykovo = power_value.Value.Value
+            self.wind_neykovo = wind_value.Value.Value
+            print(f'Turbine Status: {self.turbine_status_neykovo}')
+            print(f'Power Neykovo: {self.power_neykovo} kW')
+            print(f'Wind Neykovo: {self.wind_neykovo} m/s')
 
             if self.next_forecast_value:
                 if self.next_forecast_value == "NA":                    
@@ -100,9 +107,7 @@ class DataPublisher:
                         self.power_neykovo = power_value.Value.Value
                         self.wind_neykovo = wind_value.Value.Value
             
-            print(f'Turbine Status: {self.turbine_status_neykovo}')
-            print(f'Power Neykovo: {self.power_neykovo} kW')
-            print(f'Wind Neykovo: {self.wind_neykovo} m/s')
+
 
             # Handle negative values - set to 0 if negative, ensure within 16-bit range
             power_safe = max(0, min(65535, int(self.power_neykovo))) if self.power_neykovo is not None else 0

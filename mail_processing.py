@@ -171,7 +171,7 @@ class FileManager:
         m = file_date[1]
         y = file_date[2]
         name_date = d + "." + m + "." + y
-        print(f"Name Date: {name_date} || {d1}")
+        #print(f"Name Date: {name_date} || {d1}")
         return name_date == d1
 
     async def process_files(self):
