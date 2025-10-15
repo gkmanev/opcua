@@ -240,7 +240,7 @@ async def main():
     stop_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurStopOp'  
     opcua_client = OPCUAClient(        
         url = url_aris,     
-        client_app_uri="urn:freeopcua:client", # Aris
+        client_app_uri="urn:example.org:FreeOpcUa:python-opcua", # Aris
         cert_path=cert_base / "my_cert_last.pem",
         private_key_path=cert_base / "my_private_key_last.pem",
         wind_node = wind_node_aris,

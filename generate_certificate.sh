@@ -38,5 +38,5 @@ this way is proved with Siemens OPC UA Client/Server!
 '
 
 
-openssl req -x509 -newkey rsa:2048 -keyout my_private_key_last.pem -out my_cert_last.pem -days 655 -nodes -addext "subjectAltName = URI:urn:freeopcua:client"
+openssl req -x509 -newkey rsa:2048 -keyout my_private_key_last.pem -out my_cert_last.pem -days 655 -nodes -addext "subjectAltName = URI:urn:example.org:FreeOpcUa:python-opcua"
 openssl x509 -outform der -in my_cert_last.pem -out my_cert_last.der
