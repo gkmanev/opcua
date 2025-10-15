@@ -33,8 +33,7 @@ class OPCUAClient:
                 wind_value = await get_wind_node.read_data_value()
                 
                 get_power_node = self.client.get_node(self.power_node)
-                power_value = await get_power_node.read_data_value()
-                print(f"WIND NODE SUCCESS: {dir(get_power_node)}")     
+                power_value = await get_power_node.read_data_value()                     
                 
                 get_status_node = self.client.get_node(self.status_node)
                 status_value = await get_status_node.read_data_value()
@@ -44,6 +43,7 @@ class OPCUAClient:
                         stop_node = self.client.get_node(self.stop_node)
                         await stop_node.set_value(ua.Variant(True, ua.VariantType.Boolean))
                     if command == "start":
+                        print("HERE in the command!!!")
                         start_node = self.client.get_node(self.start_node)
                         await start_node.set_value(ua.Variant(True, ua.VariantType.Boolean))
                
