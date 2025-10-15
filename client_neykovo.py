@@ -47,7 +47,7 @@ class DataPublisher:
                 
         try:            
             self.next_forecast_value = await self.email_processor.process_files()            
-            wind_value, power_value, turbine_status = await self.opcua_client.read_data(command="stop")
+            wind_value, power_value, turbine_status = await self.opcua_client.read_data()   
             self.turbine_status_neykovo = turbine_status.Value.Value 
             self.power_neykovo = power_value.Value.Value
             self.wind_neykovo = wind_value.Value.Value
@@ -59,7 +59,7 @@ class DataPublisher:
             if self.next_forecast_value:
                 if self.next_forecast_value == "NA":                    
                     if self.turbine_status_neykovo == 3:
-                        wind_value, power_value, turbine_status = await self.opcua_client.read_data(command="stop")                   
+                        await self.opcua_client.read_data(command="stop")                   
                 else:                    
                     if self.turbine_status_neykovo == 3:                        
                         if to_num(self.wind_neykovo) >= 5 and to_num(self.power_neykovo) > 1:                                                                
