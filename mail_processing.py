@@ -16,6 +16,7 @@ from email.mime.image import MIMEImage
 from email.mime.audio import MIMEAudio
 from email.mime.base import MIMEBase
 from mimetypes import guess_type as guess_mime_type
+from openpyxl import load_workbook
 import os
 import xlrd
 import pytz
@@ -163,59 +164,110 @@ class FileManager:
 
 
     def get_file_name(self, folder):
-        tomorrow = date.today()
-        d1 = tomorrow.strftime("%d.%m.%Y")
+        today = date.today()
+        d1 = today.strftime("%d.%m.%Y")
         st = folder.split("_")[1].split("xls")[0]
         file_date = st.split('.')
         d = file_date[0]
         m = file_date[1]
         y = file_date[2]
         name_date = d + "." + m + "." + y
-        #print(f"Name Date: {name_date} || {d1}")
+        print(f"Name Date: {name_date} || {d1}")
         return name_date == d1
 
     async def process_files(self):
+        """
+        Scans enProMail for .xls or .xlsx files, reads the first matching file,
+        and returns the forecast based on self.farm ('neykovo' or 'aris').
+        Requires: xlrd (for .xls), openpyxl (for .xlsx)
+        """
+        def _open_first_sheet(filepath):
+            ext = os.path.splitext(filepath)[1].lower()
+            if ext == ".xls":
+                wb = xlrd.open_workbook(filepath)
+                return ("xls", wb.sheet_by_index(0))
+            elif ext == ".xlsx":
+                wb = load_workbook(filepath, data_only=True, read_only=True)
+                return ("xlsx", wb.worksheets[0])
+            else:
+                raise ValueError(f"Unsupported extension: {ext}")
+
+        def _cell_value(sheet_kind, sheet, r, c):
+            # r,c are 0-based like your original code
+            if sheet_kind == "xls":
+                return sheet.cell_value(r, c)
+            else:  # xlsx via openpyxl
+                return sheet.cell(row=r + 1, column=c + 1).value
+
+        def _excel_date_to_date(val):
+            # Handles both engines: datetime or Excel serial number
+            if isinstance(val, datetime):
+                return val.date()
+            if isinstance(val, (int, float)):
+                # Use xlrd's converter with datemode=0 (Excel 1900 system)
+                return xlrd.xldate_as_datetime(val, 0).date()
+            # Fallback: try pandas to_datetime
+            try:
+                return pd.to_datetime(val).date()
+            except Exception:
+                raise ValueError(f"Unrecognized date cell value: {val!r}")
+
         fn = "enProMail"
         for root, dirs, files in os.walk(fn):
-            xlsfiles = [f for f in files if f.endswith('.xls')]
-            for xlsfile in xlsfiles:
-                my_file = self.get_file_name(xlsfile)
-                if my_file:
-                    filepath = os.path.join(fn, xlsfile)
-                    excel_workbook = xlrd.open_workbook(filepath)
-                    excel_worksheet = excel_workbook.sheet_by_index(0)
-                    xl_asset = excel_worksheet.cell_value(4, 0)
-                    xl_date = xlrd.xldate_as_datetime(excel_worksheet.cell_value(1, 1), 0).date()
-                    xl_date_time = str(xl_date) + "T01:15:00"
-                    testlist = []
-                    neykovo_list = []
-                    period = (24 * 4) + 1
-                    i = 1
-                    while i < period:
-                        i += 1
-                        xl_power = excel_worksheet.cell_value(4, 3 + i)
-                        xl_neykovo_power = excel_worksheet.cell_value(5, 3 + i)
-                        testlist.append(xl_power)
-                        neykovo_list.append(xl_neykovo_power)
-                    timeIndex = pd.date_range(start=xl_date_time, periods=period - 1, freq="0H15T")
-                    dfA = pd.DataFrame(testlist, index=timeIndex)
-                    dfNeykovo = pd.DataFrame(neykovo_list, index=timeIndex)
-                    dfA.index.name = 'Aris foreacast'
-                    dfNeykovo.index.name = 'Power forecast'
-                    dfA.columns = ['pow']
-                    dfNeykovo.columns = ['pow']
-                    if self.farm == 'neykovo':
-                        forecast = await self.forecast_extractor(dfNeykovo)
-                    elif self.farm == 'aris':
-                        forecast = await self.forecast_extractor(dfA)
-                    else:
-                        forecast = None
-                    return forecast
+            # accept both .xls and .xlsx
+            excel_files = [f for f in files if f.lower().endswith((".xls", ".xlsx"))]
+            for exfile in excel_files:
+                
+                my_file = self.get_file_name(exfile)
+                if not my_file:
+                    continue
+
+                filepath = os.path.join(root, exfile)
+                kind, sheet = _open_first_sheet(filepath)
+
+                # Read header cells (same coordinates as your original code)
+                xl_asset = _cell_value(kind, sheet, 4, 0)  # not used below, but preserved
+                raw_date = _cell_value(kind, sheet, 1, 1)
+                xl_date = _excel_date_to_date(raw_date)
+                xl_date_time = f"{xl_date}T01:15:00"
+
+                # Collect quarter-hour powers from row 4 and 5, starting at column 3 + i
+                testlist = []
+                neykovo_list = []
+                period = (24 * 4) + 1  # 97
+                i = 1
+                while i < period:
+                    i += 1  # i goes 2..96 (kept identical to your logic)
+                    col = 3 + i
+                    xl_power = _cell_value(kind, sheet, 4, col)          # row 5 (0-based index 4)
+                    xl_neykovo_power = _cell_value(kind, sheet, 5, col)  # row 6 (0-based index 5)
+                    testlist.append(xl_power)
+                    neykovo_list.append(xl_neykovo_power)
+
+                timeIndex = pd.date_range(start=xl_date_time, periods=period - 1, freq="15T")
+                dfA = pd.DataFrame(testlist, index=timeIndex, columns=["pow"])                
+                dfNeykovo = pd.DataFrame(neykovo_list, index=timeIndex, columns=["pow"])                
+                dfA.index.name = "Aris foreacast"
+                dfNeykovo.index.name = "Power forecast"
+               
+
+                if self.farm == "neykovo":                    
+                    forecast = await self.forecast_extractor(dfNeykovo)
+                elif self.farm == "aris":
+                    forecast = await self.forecast_extractor(dfA)
+                else:
+                    forecast = None                
+                print(forecast)
+                return forecast  # preserve your early-return behavior
+
+        # If no matching file found:
+        return None
                     
     async def forecast_extractor(self, wind_farm_df):                    
         for row in wind_farm_df.itertuples():
+            print(row.pow)
             timenow = datetime.now()
-            quarter_min = self.lookup_quarterly(timenow.minute)                           
+            quarter_min = self.lookup_quarterly(timenow.minute)                                    
             if quarter_min == 0:
                 quarter_hour = timenow.hour + 1
             else:
@@ -249,7 +301,7 @@ class ForecastProcessor:
 
     # Call it with clearing to check for clearing mails
     async def proceed_forecast(self, clearing=False):
-        now = datetime.now()# - timedelta(days=1)
+        now = datetime.now() - timedelta(days=1)
         #temp = datetime.now() - timedelta(days=1)
         after_date = now.strftime("%Y/%m/%d")
         #before_date = temp.strftime("%Y/%m/%d")
@@ -265,7 +317,7 @@ class ForecastProcessor:
 if __name__ == "__main__":
    
     processor = ForecastProcessor()
-    file_manager = FileManager("aris")
+    file_manager = FileManager("neykovo")
     loop = asyncio.get_event_loop()
     loop.run_until_complete(processor.proceed_forecast(clearing=False))
     loop.run_until_complete(file_manager.process_files())

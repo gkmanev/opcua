@@ -46,12 +46,12 @@ class DataPublisher:
                 return None      
                 
         try:            
-            self.next_forecast_value = await self.email_processor.process_files()
-            print(f"FORECAST PRINT: {self.next_forecast_value}")
+            self.next_forecast_value = await self.email_processor.process_files()            
             wind_value, power_value, turbine_status = await self.opcua_client.read_data(command="stop")
             self.turbine_status_neykovo = turbine_status.Value.Value 
             self.power_neykovo = power_value.Value.Value
             self.wind_neykovo = wind_value.Value.Value
+            print(f"FORECAST PRINT: {self.next_forecast_value}")
             print(f'Turbine Status: {self.turbine_status_neykovo}')
             print(f'Power Neykovo: {self.power_neykovo} kW')
             print(f'Wind Neykovo: {self.wind_neykovo} m/s')
