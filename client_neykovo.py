@@ -59,22 +59,9 @@ class DataPublisher:
             if self.next_forecast_value:
                 if self.next_forecast_value == "NA":                    
                     if self.turbine_status_neykovo == 3:
-                        wind_value, power_value, turbine_status = await self.opcua_client.read_data(command="stop")
-                        self.turbine_status_neykovo = turbine_status.Value.Value 
-                        self.power_neykovo = power_value.Value.Value
-                        self.wind_neykovo = wind_value.Value.Value
-
-                    else:
-                        wind_value, power_value, turbine_status = await self.opcua_client.read_data()  
-                        self.turbine_status_neykovo = turbine_status.Value.Value  
-                        self.power_neykovo = power_value.Value.Value
-                        self.wind_neykovo = wind_value.Value.Value 
-                else:
-                    
-                    if self.turbine_status_neykovo == 3:
-                        wind_value, power_value, turbine_status = await self.opcua_client.read_data()
-                        self.power_neykovo = power_value.Value.Value
-                        self.wind_neykovo = wind_value.Value.Value 
+                        wind_value, power_value, turbine_status = await self.opcua_client.read_data(command="stop")                   
+                else:                    
+                    if self.turbine_status_neykovo == 3:                        
                         if to_num(self.wind_neykovo) >= 5 and to_num(self.power_neykovo) > 1:                                                                
                             self.is_email_send = False
                         
@@ -89,23 +76,17 @@ class DataPublisher:
                                 await self.send_warning_email()
                                 self.is_email_send = True
 
-
-
                     elif self.turbine_status_neykovo == 2:
                         wind_value, power_value, turbine_status = await self.opcua_client.read_data(command="start")
-                        self.turbine_status_neykovo = turbine_status.Value.Value
-                        self.power_neykovo = power_value.Value.Value
-                        self.wind_neykovo = wind_value.Value.Value
 
                     elif self.turbine_status_neykovo == 1:
                         await self.send_warning_email()
                         self.is_email_send = True
-                        
-                    else:                        
-                        wind_value, power_value, turbine_status = await self.opcua_client.read_data()                        
-                        self.turbine_status_neykovo = turbine_status.Value.Value
-                        self.power_neykovo = power_value.Value.Value
-                        self.wind_neykovo = wind_value.Value.Value
+                    
+                    else:
+                        await self.send_warning_email()
+                        self.is_email_send = True                    
+                    
             
 
 
@@ -134,7 +115,9 @@ class DataPublisher:
             print(f"Unexpected error: {e}")
 
 
-    async def blynk_send_power(self):        
+    async def blynk_send_power(self):      
+        if not self.power_neykovo:
+            return  
         url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v10={self.power_neykovo}"  # Neykovo  
         async with aiohttp.ClientSession() as session:
             async with session.get(url_power) as response:
@@ -142,6 +125,8 @@ class DataPublisher:
                     pass   
     
     async def blynk_send_wind(self):
+        if not self.wind_neykovo:
+            return
         url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v11={self.wind_neykovo}" # Neykovo
         async with aiohttp.ClientSession() as session:
             async with session.get(url_wind) as response:
@@ -150,6 +135,7 @@ class DataPublisher:
 
     
     async def blynk_send_forecast(self):
+        
         if self.next_forecast_value and self.next_forecast_value != "NA":
             value_published_to_blynk = self.next_forecast_value*1000 
         else:
@@ -161,6 +147,8 @@ class DataPublisher:
                     pass
 
     async def blynk_publish_accumulate(self):
+        if not self.power_neykovo:
+            return
         current_minute = datetime.now().minute      
         if current_minute % 15 == 0:
             self.accumulate_power = 0            
