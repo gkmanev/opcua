@@ -52,7 +52,7 @@ class DataPublisher:
         try:            
             self.next_forecast_value = await self.email_processor.process_files()
             print(f"FORECAST PRINT: {self.next_forecast_value}")
-            wind_value, power_value, turbine_status = await self.opcua_client.read_data(command="stop")
+            wind_value, power_value, turbine_status = await self.opcua_client.read_data()   
             self.turbine_status_aris = turbine_status.Value.Value 
             self.power_aris = power_value.Value.Value
             self.wind_aris = wind_value.Value.Value
@@ -110,13 +110,9 @@ class DataPublisher:
                         wind_value, power_value, turbine_status = await self.opcua_client.read_data()                        
                         self.turbine_status_aris = turbine_status.Value.Value
                         self.power_aris = power_value.Value.Value
-                        self.wind_aris = wind_value.Value.Value
+                        self.wind_aris = wind_value.Value.Value          
                         
-                        
-                       
-            print(f'Turbine Status: {self.turbine_status_aris} ')
-            print(f'Power Aris: {to_num(self.power_aris)} kW')
-            print(f'Wind Aris: {to_num(self.wind_aris)} m/s')
+  
 
 
             # Handle negative values - set to 0 if negative, ensure within 16-bit range
