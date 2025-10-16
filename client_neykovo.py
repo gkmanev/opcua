@@ -77,7 +77,7 @@ class DataPublisher:
                                 self.is_email_send = True
 
                     elif self.turbine_status_neykovo == 2:
-                        wind_value, power_value, turbine_status = await self.opcua_client.read_data(command="start")
+                        await self.opcua_client.read_data(command="start")
 
                     elif self.turbine_status_neykovo == 1:
                         await self.send_warning_email()
