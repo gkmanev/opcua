@@ -60,39 +60,37 @@ class DataPublisher:
             print(f'Power Aris: {to_num(self.power_aris)} kW')
             print(f'Wind Aris: {to_num(self.wind_aris)} m/s') 
 
-            if self.next_forecast_value:
-
-                if self.next_forecast_value == "NA":                    
-                    if self.turbine_status_aris == 3:
-                        await self.opcua_client.read_data(command="stop")              
+            if self.next_forecast_value not in (None, "NA"):                 
+                if self.turbine_status_aris == 3:
+                    await self.opcua_client.read_data(command="stop")              
                     
-                else:                    
-                    if self.turbine_status_aris == 3:
-                                    
-                        if to_num(self.wind_aris) >= 5 and to_num(self.power_aris) > 1:                                            
-                            self.is_email_send = False
+            else:                    
+                if self.turbine_status_aris == 3:
+                                
+                    if to_num(self.wind_aris) >= 5 and to_num(self.power_aris) > 1:                                            
+                        self.is_email_send = False
 
-                        if (self.wind_aris is not None and int(self.wind_aris) > 5 and self.power_aris is not None and int(self.power_aris) <= 1) or (
-                            self.wind_aris is not None and int(self.wind_aris) > 5 and self.power_aris is None
-                        ):                         
-                            if self.is_email_send == False:
-                                await self.send_warning_email()
-                                self.is_email_send = True
-                        if self.wind_aris is None or self.power_aris is None:
-                            if self.is_email_send == False:
-                                await self.send_warning_email()
-                                self.is_email_send = True
+                    if (self.wind_aris is not None and int(self.wind_aris) > 5 and self.power_aris is not None and int(self.power_aris) <= 1) or (
+                        self.wind_aris is not None and int(self.wind_aris) > 5 and self.power_aris is None
+                    ):                         
+                        if self.is_email_send == False:
+                            await self.send_warning_email()
+                            self.is_email_send = True
+                    if self.wind_aris is None or self.power_aris is None:
+                        if self.is_email_send == False:
+                            await self.send_warning_email()
+                            self.is_email_send = True
 
 
-                    elif self.turbine_status_aris == 2:
-                        await self.opcua_client.read_data(command="start")
-                    
-                    elif self.turbine_status_aris == 1:
-                        await self.send_warning_email()
-                        self.is_email_send = True
-                    else:
-                        await self.send_warning_email()
-                        self.is_email_send = True   
+                elif self.turbine_status_aris == 2:
+                    await self.opcua_client.read_data(command="start")
+                
+                elif self.turbine_status_aris == 1:
+                    await self.send_warning_email()
+                    self.is_email_send = True
+                else:
+                    await self.send_warning_email()
+                    self.is_email_send = True   
 
             # Handle negative values - set to 0 if negative, ensure within 16-bit range
             power_safe = max(0, min(65535, int(self.power_aris))) if self.power_aris is not None else 0

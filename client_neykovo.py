@@ -55,40 +55,38 @@ class DataPublisher:
             print(f'Turbine Status: {self.turbine_status_neykovo}')
             print(f'Power Neykovo: {self.power_neykovo} kW')
             print(f'Wind Neykovo: {self.wind_neykovo} m/s')
-
-            if self.next_forecast_value:
-                if self.next_forecast_value == "NA":                    
-                    if self.turbine_status_neykovo == 3:
-                        await self.opcua_client.read_data(command="stop")                   
-                else:                    
-                    if self.turbine_status_neykovo == 3:                        
-                        if to_num(self.wind_neykovo) >= 5 and to_num(self.power_neykovo) > 1:                                                                
-                            self.is_email_send = False
-                        
-                        if (self.wind_neykovo is not None and int(self.wind_neykovo) > 5 and self.power_neykovo is not None and int(self.power_neykovo) <= 1) or (
-                            self.wind_neykovo is not None and int(self.wind_neykovo) > 5 and self.power_neykovo is None
-                        ):                         
-                            if self.is_email_send == False:
-                                await self.send_warning_email()
-                                self.is_email_send = True
-                        if self.wind_neykovo is None or self.power_neykovo is None:
-                            if self.is_email_send == False:
-                                await self.send_warning_email()
-                                self.is_email_send = True
-
-                    elif self.turbine_status_neykovo == 2:
-                        await self.opcua_client.read_data(command="start")
-
-                    elif self.turbine_status_neykovo == 1:
-                        await self.send_warning_email()
-                        self.is_email_send = True
-                    
-                    else:
-                        print("WE ARE HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                        await self.send_warning_email()
-                        self.is_email_send = True                    
-                    
             
+            if self.next_forecast_value not in (None, "NA"):                  
+                if self.turbine_status_neykovo == 3:
+                    await self.opcua_client.read_data(command="stop")                   
+            else:                    
+                if self.turbine_status_neykovo == 3:                        
+                    if to_num(self.wind_neykovo) >= 5 and to_num(self.power_neykovo) > 1:                                                                
+                        self.is_email_send = False
+                    
+                    if (self.wind_neykovo is not None and int(self.wind_neykovo) > 5 and self.power_neykovo is not None and int(self.power_neykovo) <= 1) or (
+                        self.wind_neykovo is not None and int(self.wind_neykovo) > 5 and self.power_neykovo is None
+                    ):                         
+                        if self.is_email_send == False:
+                            await self.send_warning_email()
+                            self.is_email_send = True
+                    if self.wind_neykovo is None or self.power_neykovo is None:
+                        if self.is_email_send == False:
+                            await self.send_warning_email()
+                            self.is_email_send = True
+
+                elif self.turbine_status_neykovo == 2:
+                    await self.opcua_client.read_data(command="start")
+
+                elif self.turbine_status_neykovo == 1:
+                    await self.send_warning_email()
+                    self.is_email_send = True
+                
+                else:                    
+                    await self.send_warning_email()
+                    self.is_email_send = True                    
+                
+        
 
 
             # Handle negative values - set to 0 if negative, ensure within 16-bit range
