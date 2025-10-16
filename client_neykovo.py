@@ -83,13 +83,15 @@ class DataPublisher:
                         await self.opcua_client.read_data(command="start")
 
                     elif self.turbine_status_neykovo == 1:
-                        await self.send_warning_email()
-                        self.is_email_send = True
+                        if self.is_email_send == False:
+                            await self.send_warning_email()
+                            self.is_email_send = True
                     
                     else:
                         print("WE ARE HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                        await self.send_warning_email()
-                        self.is_email_send = True                    
+                        if self.is_email_send == False:
+                            await self.send_warning_email()
+                            self.is_email_send = True                    
                 
             
 
