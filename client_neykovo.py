@@ -84,7 +84,7 @@ class DataPublisher:
                         self.is_email_send = True
                     
                     else:
-                        print("WE ARE HERE!!!")
+                        print("WE ARE HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                         await self.send_warning_email()
                         self.is_email_send = True                    
                     
