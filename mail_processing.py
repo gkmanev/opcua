@@ -172,7 +172,7 @@ class FileManager:
         m = file_date[1]
         y = file_date[2]
         name_date = d + "." + m + "." + y
-        print(f"Name Date: {name_date} || {d1}")
+        #print(f"Name Date: {name_date} || {d1}")
         return name_date == d1
 
     async def process_files(self):
@@ -248,8 +248,7 @@ class FileManager:
                 dfA = pd.DataFrame(testlist, index=timeIndex, columns=["pow"])                
                 dfNeykovo = pd.DataFrame(neykovo_list, index=timeIndex, columns=["pow"])                
                 dfA.index.name = "Aris foreacast"
-                dfNeykovo.index.name = "Power forecast"
-               
+                dfNeykovo.index.name = "Power forecast"               
 
                 if self.farm == "neykovo":                    
                     forecast = await self.forecast_extractor(dfNeykovo)
@@ -257,7 +256,7 @@ class FileManager:
                     forecast = await self.forecast_extractor(dfA)
                 else:
                     forecast = None                
-                print(forecast)
+                
                 return forecast  # preserve your early-return behavior
 
         # If no matching file found:
@@ -265,7 +264,7 @@ class FileManager:
                     
     async def forecast_extractor(self, wind_farm_df):                    
         for row in wind_farm_df.itertuples():
-            print(row.pow)
+            
             timenow = datetime.now()
             quarter_min = self.lookup_quarterly(timenow.minute)                                    
             if quarter_min == 0:
@@ -301,7 +300,7 @@ class ForecastProcessor:
 
     # Call it with clearing to check for clearing mails
     async def proceed_forecast(self, clearing=False):
-        now = datetime.now()
+        now = datetime.now() - timedelta(days=1)
         #temp = datetime.now() - timedelta(days=1)
         after_date = now.strftime("%Y/%m/%d")
         #before_date = temp.strftime("%Y/%m/%d")
