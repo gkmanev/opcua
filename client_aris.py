@@ -86,11 +86,13 @@ class DataPublisher:
                     await self.opcua_client.read_data(command="start")
                 
                 elif self.turbine_status_aris == 1:
-                    await self.send_warning_email()
-                    self.is_email_send = True
+                    if self.is_email_send == False:
+                        await self.send_warning_email()
+                        self.is_email_send = True
                 else:
-                    await self.send_warning_email()
-                    self.is_email_send = True   
+                    if self.is_email_send == False:
+                        await self.send_warning_email()
+                        self.is_email_send = True   
 
             # Handle negative values - set to 0 if negative, ensure within 16-bit range
             power_safe = max(0, min(65535, int(self.power_aris))) if self.power_aris is not None else 0
