@@ -87,8 +87,7 @@ class DataPublisher:
                             await self.send_warning_email()
                             self.is_email_send = True
                     
-                    else:
-                        print("WE ARE HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                    else:                       
                         if self.is_email_send == False:
                             await self.send_warning_email()
                             self.is_email_send = True                    
@@ -235,7 +234,7 @@ async def main():
     scheduler.add_job(publisher.publish_data, IntervalTrigger(minutes=1))
     
 
-    scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=15, minute=3))
+    scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=10, minute=15))
     scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=11, minute=15))
     scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=12, minute=15))  
 
