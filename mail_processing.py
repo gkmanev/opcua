@@ -300,7 +300,7 @@ class ForecastProcessor:
 
     # Call it with clearing to check for clearing mails
     async def proceed_forecast(self, clearing=False):
-        now = datetime.now() 
+        now = datetime.now() - timedelta(days=1)
         #temp = datetime.now() - timedelta(days=1)
         after_date = now.strftime("%Y/%m/%d")
         #before_date = temp.strftime("%Y/%m/%d")

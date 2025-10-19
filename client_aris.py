@@ -61,7 +61,9 @@ class DataPublisher:
             print(f'Wind Aris: {to_num(self.wind_aris)} m/s') 
 
             if self.next_forecast_value is None:
-                await self.send_warning_email()                        
+                if self.is_email_send == False:
+                    await self.send_warning_email()    
+                    self.is_email_send = True                    
                     
             else: 
                 if self.next_forecast_value == "NA":                    
@@ -245,7 +247,7 @@ async def main():
     asyncio.create_task(publisher.init_modbus_server())
     scheduler.add_job(publisher.publish_data, IntervalTrigger(minutes=1))
     #scheduler.add_job(publisher.turbine_control, IntervalTrigger(minutes=1))  
-    scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=10, minute=15))
+    scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=17, minute=52))
     scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=11, minute=15))
     scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=15, minute=15))  
 

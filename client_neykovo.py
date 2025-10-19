@@ -57,7 +57,9 @@ class DataPublisher:
             print(f'Wind Neykovo: {self.wind_neykovo} m/s')
 
             if self.next_forecast_value is None:
-                await self.send_warning_email()
+                if self.is_email_send == False:
+                    await self.send_warning_email()    
+                    self.is_email_send = True 
                 
             else:
                 if self.next_forecast_value == "NA":                    
