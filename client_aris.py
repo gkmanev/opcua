@@ -66,7 +66,7 @@ class DataPublisher:
                     self.is_email_send = True                    
                     
             else: 
-                if self.next_forecast_value == "NA":                    
+                if self.next_forecast_value.upper() in {"NA", "N/A"}:                    
                     if self.turbine_status_aris == 3:
                         await self.opcua_client.read_data(command="stop")    
 
@@ -127,7 +127,7 @@ class DataPublisher:
     
 
     async def get_price(self):
-        price = await self.dam_price_processor.ibex_price()
+        price = await self.dam_price_processor.get_price_prev_quarter_shifted(country="BG", contract="A01")
         if not price:
             return
         url_price = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v3={float(price)}" 
@@ -156,7 +156,8 @@ class DataPublisher:
 
     async def blynk_send_forecast(self):
         
-        if self.next_forecast_value and self.next_forecast_value != "NA":
+        if self.next_forecast_value and self.next_forecast_value.upper() not in {"NA", "N/A"}:
+
             value_published_to_blynk = self.next_forecast_value*1000 
         else:
             value_published_to_blynk = 0
@@ -247,7 +248,7 @@ async def main():
     asyncio.create_task(publisher.init_modbus_server())
     scheduler.add_job(publisher.publish_data, IntervalTrigger(minutes=1))
     #scheduler.add_job(publisher.turbine_control, IntervalTrigger(minutes=1))  
-    scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=10, minute=15))
+    scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=14, minute=41))
     scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=11, minute=15))
     scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=15, minute=15))  
 

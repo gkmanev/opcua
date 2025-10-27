@@ -107,7 +107,7 @@ class GmailService:
     async def parse_parts(self, service, parts, folder_name, message):
         if parts:
             for part in parts:
-                filename = part.get("filename")
+                filename = f"{part.get('filename')}"
                 mimeType = part.get("mimeType")
                 body = part.get("body")
                 data = body.get("data")
@@ -152,8 +152,9 @@ class GmailService:
         if price_clearing:
             if mail_hour and mail_hour >=13: #Filter additional mails with clearings from EnPro
                 await self.parse_parts(self.service, parts, folder_name, message)
-                print("=" * 50)
+                print("=NA=" * 50)
         else:
+
             await self.parse_parts(self.service, parts, folder_name, message)
             print("=" * 50)
 
@@ -162,9 +163,8 @@ class FileManager:
     def __init__(self, farm) -> None:
         self.farm = farm
 
-
     def get_file_name(self, folder):
-        today = date.today()
+        today = date.today() 
         d1 = today.strftime("%d.%m.%Y")
         st = folder.split("_")[1].split("xls")[0]
         file_date = st.split('.')
@@ -172,7 +172,7 @@ class FileManager:
         m = file_date[1]
         y = file_date[2]
         name_date = d + "." + m + "." + y
-        #print(f"Name Date: {name_date} || {d1}")
+        print(f"Name Date: {name_date} || {d1}")
         return name_date == d1
 
     async def process_files(self):
@@ -217,8 +217,10 @@ class FileManager:
             # accept both .xls and .xlsx
             excel_files = [f for f in files if f.lower().endswith((".xls", ".xlsx"))]
             for exfile in excel_files:
+                print(exfile)
                 
                 my_file = self.get_file_name(exfile)
+                
                 if not my_file:
                     continue
 
@@ -256,7 +258,7 @@ class FileManager:
                     forecast = await self.forecast_extractor(dfA)
                 else:
                     forecast = None                
-                
+                print(forecast)
                 return forecast  # preserve your early-return behavior
 
         # If no matching file found:
@@ -300,7 +302,7 @@ class ForecastProcessor:
 
     # Call it with clearing to check for clearing mails
     async def proceed_forecast(self, clearing=False):
-        now = datetime.now() 
+        now = datetime.now() - timedelta(days=1) 
         #temp = datetime.now() - timedelta(days=1)
         after_date = now.strftime("%Y/%m/%d")
         #before_date = temp.strftime("%Y/%m/%d")

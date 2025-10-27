@@ -62,7 +62,7 @@ class DataPublisher:
                     self.is_email_send = True 
                 
             else:
-                if self.next_forecast_value == "NA":                    
+                if self.next_forecast_value.upper() in {"NA", "N/A"}:                    
                     if self.turbine_status_neykovo == 3:
                         await self.opcua_client.read_data(command="stop")                   
                 else:                    
@@ -92,8 +92,7 @@ class DataPublisher:
                     else:                       
                         if self.is_email_send == False:
                             await self.send_warning_email()
-                            self.is_email_send = True                    
-                
+                            self.is_email_send = True                                   
             
 
 
@@ -143,7 +142,8 @@ class DataPublisher:
     
     async def blynk_send_forecast(self):
         
-        if self.next_forecast_value and self.next_forecast_value != "NA":
+        if self.next_forecast_value and self.next_forecast_value.upper() not in {"NA", "N/A"}:
+
             value_published_to_blynk = self.next_forecast_value*1000 
         else:
             value_published_to_blynk = 0
