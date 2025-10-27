@@ -236,7 +236,7 @@ async def main():
     scheduler.add_job(publisher.publish_data, IntervalTrigger(minutes=1))
     
 
-    scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=10, minute=15))
+    scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=14, minute=48))
     scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=11, minute=15))
     scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=12, minute=15))  
 
