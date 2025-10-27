@@ -216,8 +216,7 @@ class FileManager:
         for root, dirs, files in os.walk(fn):
             # accept both .xls and .xlsx
             excel_files = [f for f in files if f.lower().endswith((".xls", ".xlsx"))]
-            for exfile in excel_files:
-                print(exfile)
+            for exfile in excel_files:                
                 
                 my_file = self.get_file_name(exfile)
                 
