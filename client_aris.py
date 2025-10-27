@@ -66,7 +66,7 @@ class DataPublisher:
                     self.is_email_send = True                    
                     
             else: 
-                if self.next_forecast_value.upper() in {"NA", "N/A"}:                    
+                if self.next_forecast_value == "NA" or self.next_forecast_value == "N/A":                    
                     if self.turbine_status_aris == 3:
                         await self.opcua_client.read_data(command="stop")    
 
@@ -156,7 +156,7 @@ class DataPublisher:
 
     async def blynk_send_forecast(self):
         
-        if self.next_forecast_value and self.next_forecast_value.upper() not in {"NA", "N/A"}:
+        if self.next_forecast_value != "NA" or self.next_forecast_value != "N/A":
 
             value_published_to_blynk = self.next_forecast_value*1000 
         else:

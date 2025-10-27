@@ -62,7 +62,7 @@ class DataPublisher:
                     self.is_email_send = True 
                 
             else:
-                if self.next_forecast_value.upper() in {"NA", "N/A"}:                    
+                if self.next_forecast_value == "NA" or self.next_forecast_value == "N/A":                    
                     if self.turbine_status_neykovo == 3:
                         await self.opcua_client.read_data(command="stop")                   
                 else:                    
@@ -124,6 +124,7 @@ class DataPublisher:
     async def blynk_send_power(self):      
         if not self.power_neykovo:
             return  
+        print(f"power neykovo: {self.power_neykovo}")
         url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v10={self.power_neykovo}"  # Neykovo  
         async with aiohttp.ClientSession() as session:
             async with session.get(url_power) as response:
@@ -142,7 +143,7 @@ class DataPublisher:
     
     async def blynk_send_forecast(self):
         
-        if self.next_forecast_value and self.next_forecast_value.upper() not in {"NA", "N/A"}:
+        if self.next_forecast_value != "NA" or self.next_forecast_value != "N/A":
 
             value_published_to_blynk = self.next_forecast_value*1000 
         else:
