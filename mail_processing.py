@@ -234,7 +234,8 @@ class FileManager:
             for exfile in excel_files:               
                 self.get_file_name(exfile)
 
-            max_file = max(self.todays_excel_files, key=self.leading_number)           
+            max_file = max(self.todays_excel_files, key=self.leading_number)  
+            print(f"current file in use: {max_file}")         
 
             filepath = os.path.join(root, max_file)
             kind, sheet = _open_first_sheet(filepath)
