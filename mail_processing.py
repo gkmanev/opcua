@@ -301,7 +301,7 @@ class ForecastProcessor:
 
     # Call it with clearing to check for clearing mails
     async def proceed_forecast(self, clearing=False):
-        now = datetime.now() 
+        now = datetime.now() - timedelta(days=1)
         #temp = datetime.now() - timedelta(days=1)
         after_date = now.strftime("%Y/%m/%d")
         #before_date = temp.strftime("%Y/%m/%d")
@@ -317,8 +317,8 @@ class ForecastProcessor:
 if __name__ == "__main__":
    
     processor = ForecastProcessor()
-    file_manager = FileManager("neykovo")
+    file_manager = FileManager("aris")
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(processor.proceed_forecast(clearing=False))
+    #loop.run_until_complete(processor.proceed_forecast(clearing=False))
     loop.run_until_complete(file_manager.process_files())
     

@@ -68,7 +68,8 @@ class DataPublisher:
             else: 
                 if self.next_forecast_value == "NA" or self.next_forecast_value == "N/A":                    
                     if self.turbine_status_aris == 3:
-                        await self.opcua_client.read_data(command="stop")    
+                        pass
+                        #await self.opcua_client.read_data(command="stop")    
 
                 else:                   
                     if self.turbine_status_aris == 3:
@@ -88,7 +89,8 @@ class DataPublisher:
                                 self.is_email_send = True
 
                     elif self.turbine_status_aris == 2:
-                        await self.opcua_client.read_data(command="start")
+                        pass
+                        #await self.opcua_client.read_data(command="start")
                     
                     elif self.turbine_status_aris == 1:
                         if self.is_email_send == False:
