@@ -16,7 +16,8 @@ from datetime import datetime, timedelta
 from pymodbus.datastore import ModbusSequentialDataBlock, ModbusSlaveContext, ModbusServerContext
 from pymodbus.server.async_io import ModbusTcpServer
 
-
+import logging
+logging.basicConfig(level=logging.INFO)
 
 
 class DataPublisher:
@@ -55,10 +56,10 @@ class DataPublisher:
             self.turbine_status_aris = turbine_status.Value.Value 
             self.power_aris = power_value.Value.Value
             self.wind_aris = wind_value.Value.Value
-            print(f"FORECAST PRINT: {self.next_forecast_value}")
-            print(f'Turbine Status: {self.turbine_status_aris} ')
-            print(f'Power Aris: {to_num(self.power_aris)} kW')
-            print(f'Wind Aris: {to_num(self.wind_aris)} m/s') 
+            logging.info(f"FORECAST PRINT: {self.next_forecast_value}")
+            logging.info(f'Turbine Status: {self.turbine_status_aris} ')
+            logging.info(f'Power Aris: {to_num(self.power_aris)} kW')
+            logging.info(f'Wind Aris: {to_num(self.wind_aris)} m/s') 
 
             if self.next_forecast_value is None:
                 if self.is_email_send == False:

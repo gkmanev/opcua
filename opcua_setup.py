@@ -43,7 +43,7 @@ class OPCUAClient:
                         stop_node = self.client.get_node(self.stop_node)
                         await stop_node.set_value(ua.Variant(True, ua.VariantType.Boolean))
                     if command == "start":
-                        print("HERE in the command!!!")
+                        
                         start_node = self.client.get_node(self.start_node)
                         await start_node.set_value(ua.Variant(True, ua.VariantType.Boolean))
                

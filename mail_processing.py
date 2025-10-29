@@ -21,6 +21,11 @@ import os
 import xlrd
 import pytz
 import re
+import logging
+
+logging.basicConfig(level=logging.INFO)
+
+
 
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly", 
@@ -235,7 +240,7 @@ class FileManager:
                 self.get_file_name(exfile)
 
             max_file = max(self.todays_excel_files, key=self.leading_number)  
-            print(f"current file in use: {max_file}")         
+            logging.info(f"current file in use: {max_file}")         
 
             filepath = os.path.join(root, max_file)
             kind, sheet = _open_first_sheet(filepath)
