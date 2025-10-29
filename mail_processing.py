@@ -333,6 +333,6 @@ if __name__ == "__main__":
     processor = ForecastProcessor()
     file_manager = FileManager("aris")
     loop = asyncio.get_event_loop()
-    #loop.run_until_complete(processor.proceed_forecast(clearing=False))
+    loop.run_until_complete(processor.proceed_forecast(clearing=False))
     loop.run_until_complete(file_manager.process_files())
     

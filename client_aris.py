@@ -68,8 +68,8 @@ class DataPublisher:
             else: 
                 if self.next_forecast_value == "NA" or self.next_forecast_value == "N/A":                    
                     if self.turbine_status_aris == 3:
-                        pass
-                        #await self.opcua_client.read_data(command="stop")    
+                       
+                        await self.opcua_client.read_data(command="stop")    
 
                 else:                   
                     if self.turbine_status_aris == 3:
@@ -89,8 +89,8 @@ class DataPublisher:
                                 self.is_email_send = True
 
                     elif self.turbine_status_aris == 2:
-                        pass
-                        #await self.opcua_client.read_data(command="start")
+                        
+                        await self.opcua_client.read_data(command="start")
                     
                     elif self.turbine_status_aris == 1:
                         if self.is_email_send == False:
@@ -250,7 +250,7 @@ async def main():
     asyncio.create_task(publisher.init_modbus_server())
     scheduler.add_job(publisher.publish_data, IntervalTrigger(minutes=1))
     #scheduler.add_job(publisher.turbine_control, IntervalTrigger(minutes=1))  
-    scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=10, minute=15))
+    scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=14, minute=10))
     scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=11, minute=15))
     scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=15, minute=15))  
 
