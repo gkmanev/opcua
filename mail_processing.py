@@ -20,6 +20,7 @@ from openpyxl import load_workbook
 import os
 import xlrd
 import pytz
+import re
 
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly", 
@@ -104,18 +105,18 @@ class GmailService:
             body_html=body_html,
         )
 
-    async def parse_parts(self, service, parts, folder_name, message):
+    async def parse_parts(self, service, parts, folder_name, message, mail_hour):
         if parts:
             for part in parts:
-                filename = f"{part.get('filename')}"
+                filename = f"{mail_hour}-{part.get('filename')}"
                 mimeType = part.get("mimeType")
                 body = part.get("body")
                 data = body.get("data")
                 file_size = body.get("size")
-                part_headers = part.get("headers")
+                part_headers = part.get("headers")                
 
                 if part.get("parts"):
-                    await self.parse_parts(service, part.get("parts"), folder_name, message)
+                    await self.parse_parts(service, part.get("parts"), folder_name, message, mail_hour)
                 else:
                     for part_header in part_headers:
                         part_header_name = part_header.get("name")
@@ -148,32 +149,44 @@ class GmailService:
                     date_obj = date_obj.astimezone(local_tz)
                     mail_hour = date_obj.hour
                
-        print(f"mail_hour:{mail_hour}")
+        #print(f"mail_hour:{mail_hour}")
         if price_clearing:
             if mail_hour and mail_hour >=13: #Filter additional mails with clearings from EnPro
-                await self.parse_parts(self.service, parts, folder_name, message)
-                print("=NA=" * 50)
+                await self.parse_parts(self.service, parts, folder_name, message, mail_hour)
+                #print("=NA=" * 50)
         else:
 
-            await self.parse_parts(self.service, parts, folder_name, message)
-            print("=" * 50)
+            await self.parse_parts(self.service, parts, folder_name, message, mail_hour)
+            #print("=" * 50)
 
 class FileManager:
 
     def __init__(self, farm) -> None:
         self.farm = farm
+        self.todays_excel_files = []
 
-    def get_file_name(self, folder):
-        today = date.today() 
+    def get_file_name(self, file_name):
+        
+        today = date.today()
         d1 = today.strftime("%d.%m.%Y")
-        st = folder.split("_")[1].split("xls")[0]
-        file_date = st.split('.')
-        d = file_date[0]
-        m = file_date[1]
-        y = file_date[2]
-        name_date = d + "." + m + "." + y
-        # print(f"Name Date: {name_date} || {d1}")
-        return name_date == d1
+        # Split filename from extension
+        filename_wo_ext, _ = os.path.splitext(file_name)
+        # Split on underscores: date is usually after the last underscore
+        parts = filename_wo_ext.split("_")
+        if len(parts) < 2:
+            return False  # Unexpected format
+        date_str = parts[-1]  # Last part should be the date
+        # Sometimes the date may include other text or be malformed, so check format
+        # Expecting something like "29.10.2025"
+        if date_str.count(".") != 2:
+            return False  # Not in expected date format
+        if date_str == d1:
+            self.todays_excel_files.append(file_name)
+        #return date_str == d1
+    
+    def leading_number(self, filename):
+        m = re.match(r"(\d+)", filename)
+        return int(m.group(1)) if m else -1
 
     async def process_files(self):
         """
@@ -216,49 +229,49 @@ class FileManager:
         for root, dirs, files in os.walk(fn):
             # accept both .xls and .xlsx
             excel_files = [f for f in files if f.lower().endswith((".xls", ".xlsx"))]
-            for exfile in excel_files:                
-                
-                my_file = self.get_file_name(exfile)
-                
-                if not my_file:
-                    continue
+            #max_file = max(excel_files, key=self.leading_number)  
+            #print(f"MaxFile:{max_file}")
+            for exfile in excel_files:               
+                self.get_file_name(exfile)
 
-                filepath = os.path.join(root, exfile)
-                kind, sheet = _open_first_sheet(filepath)
+            max_file = max(self.todays_excel_files, key=self.leading_number)           
 
-                # Read header cells (same coordinates as your original code)
-                xl_asset = _cell_value(kind, sheet, 4, 0)  # not used below, but preserved
-                raw_date = _cell_value(kind, sheet, 1, 1)
-                xl_date = _excel_date_to_date(raw_date)
-                xl_date_time = f"{xl_date}T01:15:00"
+            filepath = os.path.join(root, max_file)
+            kind, sheet = _open_first_sheet(filepath)
 
-                # Collect quarter-hour powers from row 4 and 5, starting at column 3 + i
-                testlist = []
-                neykovo_list = []
-                period = (24 * 4) + 1  # 97
-                i = 1
-                while i < period:
-                    i += 1  # i goes 2..96 (kept identical to your logic)
-                    col = 3 + i
-                    xl_power = _cell_value(kind, sheet, 4, col)          # row 5 (0-based index 4)
-                    xl_neykovo_power = _cell_value(kind, sheet, 5, col)  # row 6 (0-based index 5)
-                    testlist.append(xl_power)
-                    neykovo_list.append(xl_neykovo_power)
+            # Read header cells (same coordinates as your original code)
+            xl_asset = _cell_value(kind, sheet, 4, 0)  # not used below, but preserved
+            raw_date = _cell_value(kind, sheet, 1, 1)
+            xl_date = _excel_date_to_date(raw_date)
+            xl_date_time = f"{xl_date}T01:15:00"
 
-                timeIndex = pd.date_range(start=xl_date_time, periods=period - 1, freq="15T")
-                dfA = pd.DataFrame(testlist, index=timeIndex, columns=["pow"])                
-                dfNeykovo = pd.DataFrame(neykovo_list, index=timeIndex, columns=["pow"])                
-                dfA.index.name = "Aris foreacast"
-                dfNeykovo.index.name = "Power forecast"               
+            # Collect quarter-hour powers from row 4 and 5, starting at column 3 + i
+            testlist = []
+            neykovo_list = []
+            period = (24 * 4) + 1  # 97
+            i = 1
+            while i < period:
+                i += 1  # i goes 2..96 (kept identical to your logic)
+                col = 3 + i
+                xl_power = _cell_value(kind, sheet, 4, col)          # row 5 (0-based index 4)
+                xl_neykovo_power = _cell_value(kind, sheet, 5, col)  # row 6 (0-based index 5)
+                testlist.append(xl_power)
+                neykovo_list.append(xl_neykovo_power)
 
-                if self.farm == "neykovo":                    
-                    forecast = await self.forecast_extractor(dfNeykovo)
-                elif self.farm == "aris":
-                    forecast = await self.forecast_extractor(dfA)
-                else:
-                    forecast = None                
-                print(forecast)
-                return forecast  # preserve your early-return behavior
+            timeIndex = pd.date_range(start=xl_date_time, periods=period - 1, freq="15T")
+            dfA = pd.DataFrame(testlist, index=timeIndex, columns=["pow"])                
+            dfNeykovo = pd.DataFrame(neykovo_list, index=timeIndex, columns=["pow"])                
+            dfA.index.name = "Aris foreacast"
+            dfNeykovo.index.name = "Power forecast"               
+
+            if self.farm == "neykovo":                    
+                forecast = await self.forecast_extractor(dfNeykovo)
+            elif self.farm == "aris":
+                forecast = await self.forecast_extractor(dfA)
+            else:
+                forecast = None    
+                  
+            return forecast  # preserve your early-return behavior
 
         # If no matching file found:
         return None
@@ -276,7 +289,7 @@ class FileManager:
             forecast_min = row.Index.minute
             if quarter_hour == forecast_hour and forecast_min == quarter_min:                            
                 power = row.pow
-                print(f"forecast_hour={forecast_hour}:{forecast_min} || quarter_hour={quarter_hour}:{quarter_min} || Real Time:{timenow.hour}:{timenow.minute} || Power:{power}")                
+                #print(f"forecast_hour={forecast_hour}:{forecast_min} || quarter_hour={quarter_hour}:{quarter_min} || Real Time:{timenow.hour}:{timenow.minute} || Power:{power}")                
                 return power
                     
                    
@@ -307,9 +320,9 @@ class ForecastProcessor:
         #before_date = temp.strftime("%Y/%m/%d")
         sender_email = "trading@energo-pro.bg"
         query_str = f"from:{sender_email} after:{after_date} "
-        print(query_str)
+        #print(query_str)
         results = await self.gmail_service.search_messages(query_str)
-        print(f"Found {len(results)} results.")        
+        #print(f"Found {len(results)} results.")        
         for msg in results:
             await self.gmail_service.read_message(msg, price_clearing=clearing)
 
