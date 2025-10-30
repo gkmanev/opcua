@@ -6,7 +6,7 @@ import aiohttp
 from aiohttp import ClientTimeout, ClientError
 from zoneinfo import ZoneInfo  # Python 3.9+
 
-CET_TZ = ZoneInfo("Europe/Berlin")   # CET/CEST with DST handling
+CET_TZ = ZoneInfo("Europe/Sofia")   # CET/CEST with DST handling
 UTC_SHIFT_HOURS = 1                  # Shift the UTC slot by +1h vs local floored time
 
 
