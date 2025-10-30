@@ -326,9 +326,9 @@ class ForecastProcessor:
         #before_date = temp.strftime("%Y/%m/%d")
         sender_email = "trading@energo-pro.bg"
         query_str = f"from:{sender_email} after:{after_date} "
-        #print(query_str)
+        print(query_str)
         results = await self.gmail_service.search_messages(query_str)
-        #print(f"Found {len(results)} results.")        
+        print(f"Found {len(results)} results.")        
         for msg in results:
             await self.gmail_service.read_message(msg, price_clearing=clearing)
 
