@@ -295,7 +295,7 @@ class FileManager:
             forecast_min = row.Index.minute
             if quarter_hour == forecast_hour and forecast_min == quarter_min:                            
                 power = row.pow
-                #print(f"forecast_hour={forecast_hour}:{forecast_min} || quarter_hour={quarter_hour}:{quarter_min} || Real Time:{timenow.hour}:{timenow.minute} || Power:{power}")                
+                logging.info(f"forecast_hour={forecast_hour}:{forecast_min} || quarter_hour={quarter_hour}:{quarter_min} || Real Time:{timenow.hour}:{timenow.minute} || Power:{power}")                
                 return power
                     
                    
