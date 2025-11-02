@@ -13,7 +13,8 @@ from datetime import datetime
 import requests
 from pymodbus.datastore import ModbusSequentialDataBlock, ModbusSlaveContext, ModbusServerContext
 from pymodbus.server.async_io import ModbusTcpServer
-
+import logging
+logging.basicConfig(level=logging.INFO)
 
 class DataPublisher:
     def __init__(self, opcua_client, gmail_preocessing_service, email_files_processor, context, gmail_service) -> None:
@@ -51,10 +52,10 @@ class DataPublisher:
             self.turbine_status_neykovo = turbine_status.Value.Value 
             self.power_neykovo = power_value.Value.Value
             self.wind_neykovo = wind_value.Value.Value
-            print(f"FORECAST PRINT: {self.next_forecast_value}")
-            print(f'Turbine Status: {self.turbine_status_neykovo}')
-            print(f'Power Neykovo: {self.power_neykovo} kW')
-            print(f'Wind Neykovo: {self.wind_neykovo} m/s')
+            logging.info(f"FORECAST PRINT: {self.next_forecast_value}")
+            logging.info(f'Turbine Status: {self.turbine_status_neykovo}')
+            logging.info(f'Power Neykovo: {self.power_neykovo} kW')
+            logging.info(f'Wind Neykovo: {self.wind_neykovo} m/s')
 
             if self.next_forecast_value is None:
                 if self.is_email_send == False:
