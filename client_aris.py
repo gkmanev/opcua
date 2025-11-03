@@ -135,9 +135,9 @@ class DataPublisher:
             logging.info("There is no price fetched!!!")
             return
         logging.info(f"Energy Price is: {price}")
-        url_price = "https://api.datacake.co/integrations/api/10d4ce3f-5dd2-4554-8751-b5a139dd3cdf/"
+        url_price = "https://api.datacake.co/integrations/api/e823ba1a-e4df-4b2e-b0eb-545a30b47e3f/"
         payload = {
-            "device": "d7aa3e85-2c65-4da0-a6d9-c6f21d03ff99",
+            "device": "c4e5dfae-76b2-4863-96af-e45eef38f9b8",
             "Price": price
         }
         # Set appropriate headers
@@ -155,9 +155,9 @@ class DataPublisher:
     async def blynk_send_power(self): 
         if not self.power_aris:
             return       
-        url_power = "https://api.datacake.co/integrations/api/10d4ce3f-5dd2-4554-8751-b5a139dd3cdf/"  # Aris  
+        url_power = "https://api.datacake.co/integrations/api/e823ba1a-e4df-4b2e-b0eb-545a30b47e3f/"  # Aris  
         payload = {
-            "device": "d7aa3e85-2c65-4da0-a6d9-c6f21d03ff99",
+            "device": "c4e5dfae-76b2-4863-96af-e45eef38f9b8",
             "Power": self.power_aris
         }
         headers = {
@@ -173,9 +173,9 @@ class DataPublisher:
     async def blynk_send_wind(self):
         if not self.wind_aris:
             return
-        url_wind = f"https://api.datacake.co/integrations/api/10d4ce3f-5dd2-4554-8751-b5a139dd3cdf/" # Aris
+        url_wind = f"https://api.datacake.co/integrations/api/e823ba1a-e4df-4b2e-b0eb-545a30b47e3f/" # Aris
         payload = {
-            "device": "d7aa3e85-2c65-4da0-a6d9-c6f21d03ff99",
+            "device": "c4e5dfae-76b2-4863-96af-e45eef38f9b8",
             "Wind": self.wind_aris
         }
         headers = {
