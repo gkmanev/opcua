@@ -155,20 +155,38 @@ class DataPublisher:
     async def blynk_send_power(self): 
         if not self.power_aris:
             return       
-        url_power = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v4={self.power_aris}"  # Aris  
+        url_power = "https://api.datacake.co/integrations/api/10d4ce3f-5dd2-4554-8751-b5a139dd3cdf/"  # Aris  
+        payload = {
+            "device": "d7aa3e85-2c65-4da0-a6d9-c6f21d03ff99",
+            "Power": self.power_aris
+        }
+        headers = {
+            "Content-Type": "application/json"
+        }
         async with aiohttp.ClientSession() as session:
-            async with session.get(url_power) as response:
+            async with session.post(url_power, headers=headers, json=payload) as response:
                 if response.status == 200:
-                    pass   
+                    logging.info("Power sent successfully to Datacake")
+                else:
+                    logging.error(f"Failed to send power") 
 
     async def blynk_send_wind(self):
         if not self.wind_aris:
             return
-        url_wind = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v5={self.wind_aris}" # Aris
+        url_wind = f"https://api.datacake.co/integrations/api/10d4ce3f-5dd2-4554-8751-b5a139dd3cdf/" # Aris
+        payload = {
+            "device": "d7aa3e85-2c65-4da0-a6d9-c6f21d03ff99",
+            "Wind": self.wind_aris
+        }
+        headers = {
+            "Content-Type": "application/json"
+        }
         async with aiohttp.ClientSession() as session:
-            async with session.get(url_wind) as response:
+            async with session.post(url_wind, headers=headers, json=payload) as response:
                 if response.status == 200:
-                    pass    
+                    logging.info("Wind sent successfully to Datacake")
+                else:
+                    logging.error(f"Failed to send wind") 
 
     async def blynk_send_forecast(self):
         
