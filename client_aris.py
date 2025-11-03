@@ -118,7 +118,7 @@ class DataPublisher:
             await self.blynk_send_power()
             await self.blynk_send_wind()
             await self.blynk_publish_status()
-            await self.blynk_publish_accumulate()
+            #await self.blynk_publish_accumulate()
             await self.blynk_send_forecast()
             
              
@@ -135,11 +135,22 @@ class DataPublisher:
             logging.info("There is no price fetched!!!")
             return
         logging.info(f"Energy Price is: {price}")
-        url_price = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v3={float(price)}" 
+        url_price = "https://api.datacake.co/integrations/api/10d4ce3f-5dd2-4554-8751-b5a139dd3cdf/"
+        payload = {
+            "device": "d7aa3e85-2c65-4da0-a6d9-c6f21d03ff99",
+            "Price": price
+        }
+        # Set appropriate headers
+        headers = {
+            "Content-Type": "application/json"
+        }
         async with aiohttp.ClientSession() as session:
-            async with session.get(url_price) as response:
+            async with session.post(url_price, headers=headers, json=payload) as response:
                 if response.status == 200:
-                    pass
+                    logging.info("Price sent successfully to Datacake")
+                else:
+                    logging.error(f"Failed to send price")
+                
 
     async def blynk_send_power(self): 
         if not self.power_aris:
@@ -172,18 +183,18 @@ class DataPublisher:
                 if response.status == 200:
                     pass      
     
-    async def blynk_publish_accumulate(self):
-        if not self.power_aris:
-            return
-        current_minute = datetime.now().minute      
-        if current_minute % 15 == 0:
-            self.accumulate_power = 0            
-        self.accumulate_power += int(self.power_aris)
-        url_aris_accumulate = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v1={self.accumulate_power/60}"  # Aris  
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url_aris_accumulate) as response:
-                if response.status == 200:
-                    pass  
+    # async def blynk_publish_accumulate(self):
+    #     if not self.power_aris:
+    #         return
+    #     current_minute = datetime.now().minute      
+    #     if current_minute % 15 == 0:
+    #         self.accumulate_power = 0            
+    #     self.accumulate_power += int(self.power_aris)
+    #     url_aris_accumulate = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v1={self.accumulate_power/60}"  # Aris  
+    #     async with aiohttp.ClientSession() as session:
+    #         async with session.get(url_aris_accumulate) as response:
+    #             if response.status == 200:
+    #                 pass  
 
     async def blynk_publish_status(self):        
         #publish turbine status

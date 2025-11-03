@@ -7,7 +7,7 @@ url = "https://api.datacake.co/integrations/api/10d4ce3f-5dd2-4554-8751-b5a139dd
 # Compose the JSON payload as per the decoder's expected format
 payload = {
     "device": "d7aa3e85-2c65-4da0-a6d9-c6f21d03ff99",
-    "power": 56
+    "fileInUse": "TheNameOfTheFileInUse"
 }
 
 # Set appropriate headers
