@@ -240,7 +240,7 @@ async def main():
 
     scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=10, minute=15))
     scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=11, minute=15))
-    scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=12, minute=15))  
+    scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=13, minute=5))  
 
     scheduler.add_job(partial(gmail_processor.proceed_forecast, clearing=True), CronTrigger(hour=15, minute=0))
     scheduler.add_job(partial(gmail_processor.proceed_forecast, clearing=True), CronTrigger(hour=16, minute=50))
