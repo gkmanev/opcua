@@ -135,21 +135,40 @@ class DataPublisher:
             logging.info("There is no price fetched!!!")
             return
         logging.info(f"Energy Price is: {price}")
-        url_price = "https://api.datacake.co/integrations/api/e823ba1a-e4df-4b2e-b0eb-545a30b47e3f/"
-        payload = {
-            "device": "c4e5dfae-76b2-4863-96af-e45eef38f9b8",
-            "Price": price
-        }
-        # Set appropriate headers
-        headers = {
-            "Content-Type": "application/json"
-        }
+        
         async with aiohttp.ClientSession() as session:
-            async with session.post(url_price, headers=headers, json=payload) as response:
-                if response.status == 200:
-                    logging.info("Price sent successfully to Datacake")
-                else:
-                    logging.error(f"Failed to send price")
+            url_price = "https://api.datacake.co/integrations/api/e823ba1a-e4df-4b2e-b0eb-545a30b47e3f/"
+            payload = {
+                "device": "c4e5dfae-76b2-4863-96af-e45eef38f9b8",
+                "Price": price
+            }
+            # Set appropriate headers
+            headers = {
+                "Content-Type": "application/json"
+            }
+            try:
+                async with session.post(url_price, headers=headers, json=payload) as response:
+                    if response.status == 200:
+                        logging.info("Price sent successfully to Datacake")
+                    else:
+                        logging.error(f"Failed to send price")
+            except Exception as e:
+                logging.exception(f"Datacake request error: {e}")
+        
+            # Blynk API
+            url_price_blynk = "https://fra1.blynk.cloud/external/api/update"
+            params = {
+                "token": "RDng9bL06n9TotZY9sNvssAYxIoFPik8",
+                "pin": "v3",
+                "value": price,
+            }            
+            try:
+                async with session.get(url_price_blynk, params=params, timeout=aiohttp.ClientTimeout(total=10)) as resp:
+                    if resp.status != 200:
+                        body = await resp.text()
+                        logging.error(f"Blynk update failed: {resp.status} {body}")
+            except Exception as e:
+                logging.exception(f"Blynk request error: {e}")
                 
 
     async def blynk_send_power(self): 
