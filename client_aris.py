@@ -137,24 +137,7 @@ class DataPublisher:
         logging.info(f"Energy Price is: {price}")
         
         async with aiohttp.ClientSession() as session:
-            url_price = "https://api.datacake.co/integrations/api/e823ba1a-e4df-4b2e-b0eb-545a30b47e3f/"
-            payload = {
-                "device": "c4e5dfae-76b2-4863-96af-e45eef38f9b8",
-                "Price": price
-            }
-            # Set appropriate headers
-            headers = {
-                "Content-Type": "application/json"
-            }
-            try:
-                async with session.post(url_price, headers=headers, json=payload) as response:
-                    if response.status == 200:
-                        logging.info("Price sent successfully to Datacake")
-                    else:
-                        logging.error(f"Failed to send price")
-            except Exception as e:
-                logging.exception(f"Datacake request error: {e}")
-        
+
             # Blynk API
             url_price_blynk = "https://fra1.blynk.cloud/external/api/update"
             params = {
@@ -173,24 +156,7 @@ class DataPublisher:
 
     async def blynk_send_power(self):
 
-        async with aiohttp.ClientSession() as session:
-            # Datacake API
-            url_power = "https://api.datacake.co/integrations/api/e823ba1a-e4df-4b2e-b0eb-545a30b47e3f/"
-            payload = {
-                "device": "c4e5dfae-76b2-4863-96af-e45eef38f9b8",
-                "Power": float(self.power_aris),
-            }
-            headers = {"Content-Type": "application/json"}
-            
-            try:
-                async with session.post(url_power, headers=headers, json=payload, timeout=aiohttp.ClientTimeout(total=10)) as resp:
-                    if resp.status == 200:
-                        logging.info("Power sent successfully to Datacake")
-                    else:
-                        body = await resp.text()
-                        logging.error(f"Datacake send failed: {resp.status} {body}")
-            except Exception as e:
-                logging.exception(f"Datacake request error: {e}")
+        async with aiohttp.ClientSession() as session:            
             
             # Blynk API
             url_power_blynk = "https://fra1.blynk.cloud/external/api/update"
@@ -217,24 +183,7 @@ class DataPublisher:
         
         logging.info(f"Wind is: {self.wind_aris}")
         
-        async with aiohttp.ClientSession() as session:
-            # Datacake API
-            url_wind = "https://api.datacake.co/integrations/api/e823ba1a-e4df-4b2e-b0eb-545a30b47e3f/"
-            payload = {
-                "device": "c4e5dfae-76b2-4863-96af-e45eef38f9b8",
-                "Wind": float(self.wind_aris),
-            }
-            headers = {"Content-Type": "application/json"}
-            
-            try:
-                async with session.post(url_wind, headers=headers, json=payload, timeout=aiohttp.ClientTimeout(total=10)) as resp:
-                    if resp.status == 200:
-                        logging.info("Wind sent successfully to Datacake")
-                    else:
-                        body = await resp.text()
-                        logging.error(f"Datacake send failed: {resp.status} {body}")
-            except Exception as e:
-                logging.exception(f"Datacake request error: {e}")
+        async with aiohttp.ClientSession() as session:            
             
             # Blynk API
             url_wind_blynk = "https://fra1.blynk.cloud/external/api/update"

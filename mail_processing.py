@@ -229,17 +229,20 @@ class FileManager:
                 return pd.to_datetime(val).date()
             except Exception:
                 raise ValueError(f"Unrecognized date cell value: {val!r}")
-
+            
+        self.todays_excel_files.clear() 
         fn = "enProMail"
         for root, dirs, files in os.walk(fn):
             # accept both .xls and .xlsx
-            excel_files = [f for f in files if f.lower().endswith((".xls", ".xlsx"))]
+            excel_files = [f for f in files if f.lower().endswith((".xls", ".xlsx"))]            
             #max_file = max(excel_files, key=self.leading_number)  
             #print(f"MaxFile:{max_file}")
             for exfile in excel_files:               
                 self.get_file_name(exfile)
 
-            max_file = max(self.todays_excel_files, key=self.leading_number)  
+            self.todays_excel_files.sort(key=lambda f: os.path.getmtime(os.path.join(root, f)), reverse=True)            
+            max_file = self.todays_excel_files[0]  # Most recently modified file
+            
             logging.info(f"current file in use: {max_file}")         
 
             filepath = os.path.join(root, max_file)
@@ -338,6 +341,6 @@ if __name__ == "__main__":
     processor = ForecastProcessor()
     file_manager = FileManager("aris")
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(processor.proceed_forecast(clearing=False))
+    #loop.run_until_complete(processor.proceed_forecast(clearing=False))
     loop.run_until_complete(file_manager.process_files())
     
