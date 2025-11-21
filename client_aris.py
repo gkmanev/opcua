@@ -118,7 +118,7 @@ class DataPublisher:
             await self.blynk_send_power()
             await self.blynk_send_wind()
             await self.blynk_publish_status()
-            #await self.blynk_publish_accumulate()
+            await self.blynk_publish_accumulate()
             await self.blynk_send_forecast()
             
              
@@ -216,18 +216,18 @@ class DataPublisher:
                 if response.status == 200:
                     pass      
     
-    # async def blynk_publish_accumulate(self):
-    #     if not self.power_aris:
-    #         return
-    #     current_minute = datetime.now().minute      
-    #     if current_minute % 15 == 0:
-    #         self.accumulate_power = 0            
-    #     self.accumulate_power += int(self.power_aris)
-    #     url_aris_accumulate = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v1={self.accumulate_power/60}"  # Aris  
-    #     async with aiohttp.ClientSession() as session:
-    #         async with session.get(url_aris_accumulate) as response:
-    #             if response.status == 200:
-    #                 pass  
+    async def blynk_publish_accumulate(self):
+        if not self.power_aris:
+            return
+        current_minute = datetime.now().minute      
+        if current_minute % 15 == 0:
+            self.accumulate_power = 0            
+        self.accumulate_power += int(self.power_aris)
+        url_aris_accumulate = f"https://fra1.blynk.cloud/external/api/batch/update?token=RDng9bL06n9TotZY9sNvssAYxIoFPik8&v1={self.accumulate_power/60}"  # Aris  
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url_aris_accumulate) as response:
+                if response.status == 200:
+                    pass  
 
     async def blynk_publish_status(self):        
         #publish turbine status
