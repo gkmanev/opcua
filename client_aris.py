@@ -276,7 +276,7 @@ async def main():
     wind_node_aris =        'ns=2;s=DA.Rakovo Aris.WTG01.WMET01.HorWdSpd'
     power_node_aris =       'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.W'
     status_node_aris =      'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurSt' 
-    frequency_node_aris =   'ns=2;s=DA.Rakovo Aris.WTG01.WCNV01.GriOkTmh'
+    frequency_node_aris =   'ns=2;s=DA.Rakovo Aris.WTG01.WCNV01.GriHz'
 
     #start/stop
     start_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurStrOp'
