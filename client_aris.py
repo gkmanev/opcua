@@ -31,8 +31,7 @@ class DataPublisher:
         self.turbine_status_aris = None
         self.power_aris = None
         self.wind_aris = None
-        self.freq_aris = None
-        self.react_aris = None
+        self.freq_aris = None       
         self.context = context
         self.gmail_service = gmail_service
         self.is_email_send = False
@@ -54,12 +53,11 @@ class DataPublisher:
                 return None     
         try:            
             self.next_forecast_value = await self.email_processor.process_files()            
-            wind_value, power_value, turbine_status, freq_value, react_value = await self.opcua_client.read_data()   
+            wind_value, power_value, turbine_status, freq_value = await self.opcua_client.read_data()   
             self.turbine_status_aris = turbine_status.Value.Value 
             self.power_aris = power_value.Value.Value
             self.wind_aris = wind_value.Value.Value
-            self.freq_aris = freq_value.Value.Value
-            self.react_aris = react_value.Value.Value
+            self.freq_aris = freq_value.Value.Value         
 
 
 
@@ -68,7 +66,7 @@ class DataPublisher:
             logging.info(f'Power Aris: {to_num(self.power_aris)} kW')
             logging.info(f'Wind Aris: {to_num(self.wind_aris)} m/s') 
             logging.info(f'Freq Aris: {to_num(self.freq_aris)} Hz') 
-            logging.info(f'Reactive Aris: {to_num(self.react_aris)} kW')
+         
 
             if self.next_forecast_value is None:
                 if self.is_email_send == False:
@@ -114,8 +112,7 @@ class DataPublisher:
             # Handle negative values - set to 0 if negative, ensure within 16-bit range
             power_safe = max(0, min(65535, int(self.power_aris))) if self.power_aris is not None else 0
             wind_safe =  max(0, min(65535, int(self.wind_aris))) if self.wind_aris is not None else 0
-            freq_safe =  max(0, min(65535, int(self.freq_aris))) if self.freq_aris is not None else 0
-            react_safe = max(0, min(65535, int(self.react_aris))) if self.react_aris is not None else 0
+            freq_safe =  max(0, min(65535, int(self.freq_aris))) if self.freq_aris is not None else 0          
             
             # Optional: Log when values are clamped
             if self.power_aris is not None and int(self.power_aris) != power_safe:
@@ -124,7 +121,7 @@ class DataPublisher:
                 print(f"Wind value adjusted: {int(self.wind_aris)} -> {wind_safe}")
 
             # Write safe values to Modbus registers
-            self.context[0x00].setValues(3, 0, [power_safe, wind_safe, freq_safe, react_safe])
+            self.context[0x00].setValues(3, 0, [power_safe, wind_safe, freq_safe])
 
             await self.blynk_send_power()
             await self.blynk_send_wind()
@@ -285,7 +282,7 @@ async def main():
     power_node_aris =       'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.W'
     status_node_aris =      'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurSt' 
     frequency_node_aris =   'ns=2;s=DA.Rakovo Aris.WTG01.WCNV01.GriHz'
-    reactive_power_node =   'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.Var'
+    
 
     #start/stop
     start_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurStrOp'
@@ -300,8 +297,7 @@ async def main():
         status_node = status_node_aris,
         start_node = start_node_aris,
         stop_node = stop_node_aris,
-        freq_node= frequency_node_aris,
-        react_node = reactive_power_node
+        freq_node= frequency_node_aris,        
     )
     await opcua_client.setup()
     gmail_service = GmailService()
