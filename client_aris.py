@@ -32,6 +32,7 @@ class DataPublisher:
         self.power_aris = None
         self.wind_aris = None
         self.freq_aris = None
+        self.react_node = None
         self.context = context
         self.gmail_service = gmail_service
         self.is_email_send = False
@@ -63,6 +64,7 @@ class DataPublisher:
             logging.info(f'Power Aris: {to_num(self.power_aris)} kW')
             logging.info(f'Wind Aris: {to_num(self.wind_aris)} m/s') 
             logging.info(f'Freq Aris: {to_num(self.freq_aris)} Hz') 
+            logging.info(f'Reactive Aris: {to_num(self.react_node)} kW')
 
             if self.next_forecast_value is None:
                 if self.is_email_send == False:
@@ -277,6 +279,7 @@ async def main():
     power_node_aris =       'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.W'
     status_node_aris =      'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurSt' 
     frequency_node_aris =   'ns=2;s=DA.Rakovo Aris.WTG01.WCNV01.GriHz'
+    reactive_power_node =   'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.Var'
 
     #start/stop
     start_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurStrOp'
@@ -291,7 +294,8 @@ async def main():
         status_node = status_node_aris,
         start_node = start_node_aris,
         stop_node = stop_node_aris,
-        freq_node=frequency_node_aris
+        freq_node= frequency_node_aris,
+        react_node = reactive_power_node
     )
     await opcua_client.setup()
     gmail_service = GmailService()
