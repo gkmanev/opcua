@@ -124,7 +124,7 @@ class DataPublisher:
                 print(f"Wind value adjusted: {int(self.wind_aris)} -> {wind_safe}")
 
             # Write safe values to Modbus registers
-            self.context[0x00].setValues(3, 0, [power_safe, wind_safe])
+            self.context[0x00].setValues(3, 0, [power_safe, wind_safe, freq_safe, react_safe])
 
             await self.blynk_send_power()
             await self.blynk_send_wind()
