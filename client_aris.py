@@ -31,6 +31,7 @@ class DataPublisher:
         self.turbine_status_aris = None
         self.power_aris = None
         self.wind_aris = None
+        self.freq_aris = None
         self.context = context
         self.gmail_service = gmail_service
         self.is_email_send = False
@@ -52,14 +53,16 @@ class DataPublisher:
                 return None     
         try:            
             self.next_forecast_value = await self.email_processor.process_files()            
-            wind_value, power_value, turbine_status = await self.opcua_client.read_data()   
+            wind_value, power_value, turbine_status, freq_value = await self.opcua_client.read_data()   
             self.turbine_status_aris = turbine_status.Value.Value 
             self.power_aris = power_value.Value.Value
             self.wind_aris = wind_value.Value.Value
+            self.freq_aris = freq_value.Value.Value
             logging.info(f"FORECAST PRINT: {self.next_forecast_value}")
             logging.info(f'Turbine Status: {self.turbine_status_aris} ')
             logging.info(f'Power Aris: {to_num(self.power_aris)} kW')
             logging.info(f'Wind Aris: {to_num(self.wind_aris)} m/s') 
+            logging.info(f'Freq Aris: {to_num(self.freq_aris)} Hz') 
 
             if self.next_forecast_value is None:
                 if self.is_email_send == False:
@@ -270,9 +273,11 @@ async def main():
     
 
     url_aris = "opc.tcp://10.126.252.1:62550/DataAccessServer"
-    wind_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WMET01.HorWdSpd'
-    power_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.W'
-    status_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurSt' 
+    wind_node_aris =        'ns=2;s=DA.Rakovo Aris.WTG01.WMET01.HorWdSpd'
+    power_node_aris =       'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.W'
+    status_node_aris =      'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurSt' 
+    frequency_node_aris =   'ns=2;s=DA.Rakovo Aris.WTG01.WCNV01.GriOkTmh'
+
     #start/stop
     start_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurStrOp'
     stop_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurStopOp'  
@@ -285,7 +290,8 @@ async def main():
         power_node = power_node_aris,
         status_node = status_node_aris,
         start_node = start_node_aris,
-        stop_node = stop_node_aris
+        stop_node = stop_node_aris,
+        freq_node=frequency_node_aris
     )
     await opcua_client.setup()
     gmail_service = GmailService()

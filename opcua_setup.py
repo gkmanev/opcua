@@ -9,7 +9,7 @@ _logger = logging.getLogger('asyncua')
 
 
 class OPCUAClient:
-    def __init__(self, url, client_app_uri, cert_path, private_key_path, wind_node, power_node, status_node, start_node, stop_node):
+    def __init__(self, url, client_app_uri, cert_path, private_key_path, wind_node, power_node, status_node, start_node, stop_node, freq_node=None):
         self.client = UA_Client(url=url)
         self.client.application_uri = client_app_uri
         self.cert_path = cert_path
@@ -19,6 +19,7 @@ class OPCUAClient:
         self.status_node = status_node
         self.start_node = start_node
         self.stop_node = stop_node
+        self.freq_node = freq_node
 
     async def setup(self):
         await self.client.set_security_string(f"Basic256,SignAndEncrypt,{self.cert_path},{self.private_key_path}")
@@ -28,8 +29,8 @@ class OPCUAClient:
     async def read_data(self, command=None):
         try:
             async with self.client:            
-                get_wind_node = self.client.get_node(self.wind_node)  
-                         
+                
+                get_wind_node = self.client.get_node(self.wind_node)                         
                 wind_value = await get_wind_node.read_data_value()
                 
                 get_power_node = self.client.get_node(self.power_node)
@@ -37,6 +38,9 @@ class OPCUAClient:
                 
                 get_status_node = self.client.get_node(self.status_node)
                 status_value = await get_status_node.read_data_value()
+
+                get_freq_node = self.client.get_node(self.freq_node)
+                freq_value = await get_freq_node.read_data_value()
                 
                 if command:
                     if command == "stop":
@@ -49,7 +53,7 @@ class OPCUAClient:
                
 
 
-                return wind_value, power_value, status_value
+                return wind_value, power_value, status_value, freq_value
         except asyncua.ua.UaStatusCodeError as e:
             _logger.error(f"OPC UA status code error: {e}")
         except asyncio.CancelledError:
