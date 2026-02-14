@@ -40,8 +40,10 @@ class OPCUAClient:
                 get_status_node = self.client.get_node(self.status_node)
                 status_value = await get_status_node.read_data_value()
 
-                get_freq_node = self.client.get_node(self.freq_node)
-                freq_value = await get_freq_node.read_data_value()
+                freq_value = None
+                if self.freq_node:
+                    get_freq_node = self.client.get_node(self.freq_node)
+                    freq_value = await get_freq_node.read_data_value()
 
                 if command:
                     if command == "stop":

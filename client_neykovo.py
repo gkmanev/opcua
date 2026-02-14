@@ -46,10 +46,10 @@ class DataPublisher:
             except (TypeError, ValueError):
                 return None      
                 
-        try:            
-            self.next_forecast_value = await self.email_processor.process_files()            
-            wind_value, power_value, turbine_status = await self.opcua_client.read_data()   
-            self.turbine_status_neykovo = turbine_status.Value.Value 
+        try:
+            self.next_forecast_value = await self.email_processor.process_files()
+            wind_value, power_value, turbine_status, freq_value = await self.opcua_client.read_data()
+            self.turbine_status_neykovo = turbine_status.Value.Value
             self.power_neykovo = power_value.Value.Value
             self.wind_neykovo = wind_value.Value.Value
             logging.info(f"FORECAST PRINT: {self.next_forecast_value}")
