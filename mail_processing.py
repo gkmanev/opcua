@@ -232,6 +232,10 @@ class FileManager:
             
         self.todays_excel_files.clear() 
         fn = "enProMail"
+        if not os.path.isdir(fn):
+            logging.warning(f"Folder not found: {fn}. No files to process.")
+            return None
+
         for root, dirs, files in os.walk(fn):
             # accept both .xls and .xlsx
             excel_files = [f for f in files if f.lower().endswith((".xls", ".xlsx"))]            
@@ -240,8 +244,14 @@ class FileManager:
             for exfile in excel_files:               
                 self.get_file_name(exfile)
 
-            self.todays_excel_files.sort(key=lambda f: os.path.getmtime(os.path.join(root, f)), reverse=True)            
-            max_file = self.todays_excel_files[0]  # Most recently modified file
+            if not self.todays_excel_files:
+                logging.warning("No Excel files found for today in enProMail.")
+                return None
+
+            max_file = max(
+                self.todays_excel_files,
+                key=self.leading_number,
+            )  # Prefer highest leading number
             
             logging.info(f"current file in use: {max_file}")         
 
@@ -331,7 +341,10 @@ class ForecastProcessor:
         query_str = f"from:{sender_email} after:{after_date} "
         print(query_str)
         results = await self.gmail_service.search_messages(query_str)
-        print(f"Found {len(results)} results.")        
+        if results:
+            print(f"Found {len(results)} email(s).")
+        else:
+            print("No emails found for the query.")
         for msg in results:
             await self.gmail_service.read_message(msg, price_clearing=clearing)
 
