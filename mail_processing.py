@@ -299,8 +299,8 @@ class FileManager:
         for row in wind_farm_df.itertuples():
             
             timenow = datetime.now()
-            quarter_min = self.lookup_quarterly(timenow.minute)                                    
-            if quarter_min == 0:
+            quarter_min = self.lookup_quarterly(timenow.minute)
+            if timenow.minute >= 30:
                 quarter_hour = timenow.hour + 1
             else:
                 quarter_hour = timenow.hour                     
@@ -314,15 +314,15 @@ class FileManager:
                    
     
     def lookup_quarterly(self, minutes):
-        
+
         if 0 <= minutes <= 14:
-            return 15
-        elif 15 <= minutes <= 29:
             return 30
-        elif 30 <= minutes <= 44:
+        elif 15 <= minutes <= 29:
             return 45
-        elif 45 <= minutes <= 59:
+        elif 30 <= minutes <= 44:
             return 0
+        elif 45 <= minutes <= 59:
+            return 15
         else:
             raise ValueError("Minutes must be between 0 and 59")
    
@@ -354,6 +354,6 @@ if __name__ == "__main__":
     processor = ForecastProcessor()
     file_manager = FileManager("aris")
     loop = asyncio.get_event_loop()
-    #loop.run_until_complete(processor.proceed_forecast(clearing=False))
+    loop.run_until_complete(processor.proceed_forecast(clearing=False))
     loop.run_until_complete(file_manager.process_files())
     
