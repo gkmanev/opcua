@@ -1,26 +1,24 @@
 import asyncio
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from typing import Optional, List, Dict, Any
 
 import aiohttp
 from aiohttp import ClientTimeout, ClientError
-from zoneinfo import ZoneInfo  # Python 3.9+
+from zoneinfo import ZoneInfo
 
-CET_TZ = ZoneInfo("Europe/Sofia")   # CET/CEST with DST handling
-UTC_SHIFT_HOURS = 2                  # Shift the UTC slot by +1h vs local floored time
+BG_TZ = ZoneInfo("Europe/Sofia")
 
 
 class PriceProcessor:
-    BASE_URL = "http://85.14.6.37:16601/api/prices/range/"
+    BASE_URL = "https://api.visualize.energy/api/prices/range/"
 
     def __init__(self, timeout_seconds: int = 10):
         self.timeout = ClientTimeout(total=timeout_seconds)
 
     @staticmethod
-    def _fmt_z(dt: datetime) -> str:
-        """Format tz-aware datetime as ISO 8601 with 'Z' suffix (UTC)."""
-        dt = dt.astimezone(timezone.utc)
-        return dt.replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    def _parse_api_datetime_utc(value: str) -> datetime:
+        """Parse API timestamps like 2026-03-26T00:00:00Z into aware UTC datetimes."""
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
     @staticmethod
     def _floor_15min(dt: datetime) -> datetime:
@@ -28,41 +26,21 @@ class PriceProcessor:
         minute = (dt.minute // 15) * 15
         return dt.replace(minute=minute, second=0, microsecond=0)
 
-    @staticmethod
-    def _tomorrow_midnight_utc_from_local(now_local: datetime) -> datetime:
-        """UTC timestamp for local midnight tomorrow."""
-        tomorrow = (now_local + timedelta(days=1)).date()
-        midnight_local = datetime.combine(tomorrow, datetime.min.time(), tzinfo=CET_TZ)
-        return midnight_local.astimezone(timezone.utc)
-
-    async def fetch_prices_range(
+    async def fetch_prices_period(
         self,
         country: str = "BG",
-        contract: str = "A01",
-        start_dt: Optional[datetime] = None,  # tz-aware, any tz
-        end_dt: Optional[datetime] = None,    # tz-aware, any tz
+        period: str = "today",
     ) -> Optional[List[Dict[str, Any]]]:
-        """Fetch price points for [start_dt, end_dt). Converts to UTC for the API."""
+        """Fetch price points for a predefined API period such as today or yesterday."""
         try:
-            now_local = datetime.now(CET_TZ)
-            start_dt = start_dt or now_local
-            end_dt = end_dt or self._tomorrow_midnight_utc_from_local(now_local)
-
-            # Convert to UTC for the API query
-            start_utc = start_dt.astimezone(timezone.utc)
-            end_utc = end_dt.astimezone(timezone.utc)
-
             params = {
                 "country": country,
-                "contract": contract,
-                "start": self._fmt_z(start_utc),
-                "end": self._fmt_z(end_utc),
+                "period": period,
             }
 
             async with aiohttp.ClientSession(timeout=self.timeout) as session:
                 url = str(aiohttp.client.URL(self.BASE_URL).with_query(params))
                 print(f"Fetching: {url}")
-                print(f"Local (CET/CEST) range: {start_dt} → {end_dt}")
 
                 async with session.get(self.BASE_URL, params=params) as resp:
                     resp.raise_for_status()
@@ -73,7 +51,7 @@ class PriceProcessor:
                 print("No data returned.")
                 return None
 
-            print(f"Fetched {len(items)} price points successfully.")
+            print(f"Fetched {len(items)} price points successfully for period={period}.")
             return items
 
         except ClientError as e:
@@ -84,53 +62,65 @@ class PriceProcessor:
             print(f"Unexpected error: {e}")
         return None
 
+    def _find_item_for_local_slot(
+        self,
+        items: List[Dict[str, Any]],
+        target_local: datetime,
+    ) -> Optional[Dict[str, Any]]:
+        for item in items:
+            timestamp_utc = item.get("datetime_utc")
+            if not timestamp_utc:
+                continue
+
+            item_local = self._parse_api_datetime_utc(timestamp_utc).astimezone(BG_TZ)
+            item_local = item_local.replace(second=0, microsecond=0)
+            if item_local == target_local:
+                return item
+        return None
+
     async def get_price_prev_quarter_shifted(self, country: str = "BG", contract: str = "A01") -> Optional[float]:
         """
-        Floor NOW in CET/CEST to previous 15-min slot, then shift the UTC target by +UTC_SHIFT_HOURS.
-        Example: now=13:27 CET -> local target=13:15 CET -> desired UTC = 13:15Z (i.e., +1h vs 12:15Z).
-        Also prints both UTC and CET/CEST labels for the matched slot.
+        Return the price for the current BG 15-minute slot.
+        The API timestamps are UTC, so items are converted to Europe/Sofia before matching.
+        The contract argument is kept for caller compatibility but is not used by this endpoint.
         """
-        now_local = datetime.now(CET_TZ)
+        _ = contract
+
+        now_local = datetime.now(BG_TZ)
         target_local = self._floor_15min(now_local)
-
-        # Convert local target to UTC, then apply the requested shift (+1h)
-        base_utc = target_local.astimezone(timezone.utc)
-        target_utc = base_utc + timedelta(hours=UTC_SHIFT_HOURS)
-        target_cet = target_utc.astimezone(CET_TZ)
-
-        end_utc = self._tomorrow_midnight_utc_from_local(now_local)
-
-        print(f"Local now: {now_local.strftime('%Y-%m-%d %H:%M:%S %Z')} → Local floored: {target_local.strftime('%H:%M %Z')}")
-        print(f"Desired target: {target_utc.strftime('%H:%M')} UTC ↔ {target_cet.strftime('%H:%M %Z')}")
-
-        # Fetch including this desired UTC target
-        items = await self.fetch_prices_range(
-            country=country,
-            contract=contract,
-            start_dt=target_utc,    # start at the shifted UTC moment
-            end_dt=end_utc,         # run until local midnight tomorrow (in UTC)
+        print(
+            f"Local now: {now_local.strftime('%Y-%m-%d %H:%M:%S %Z')} -> "
+            f"Local floored: {target_local.strftime('%Y-%m-%d %H:%M %Z')}"
         )
-        if not items:
-            return None
 
-        target_utc_str = self._fmt_z(target_utc)
-        match = next((it for it in items if it.get("datetime_utc") == target_utc_str), None)
+        items = await self.fetch_prices_period(country=country, period="today")
+        match = self._find_item_for_local_slot(items or [], target_local)
+
         if not match:
-            print(f"No item found for target UTC slot {target_utc_str}.")
+            items = await self.fetch_prices_period(country=country, period="yesterday")
+            match = self._find_item_for_local_slot(items or [], target_local)
+
+        if not match:
+            print(f"No item found for BG local slot {target_local.isoformat()}.")
             return None
 
-        print(f"Matched {target_utc.strftime('%H:%M')} UTC ↔ {target_cet.strftime('%H:%M %Z')} ({target_utc_str})")
+        matched_utc = self._parse_api_datetime_utc(match["datetime_utc"])
+        matched_local = matched_utc.astimezone(BG_TZ)
+        print(
+            f"Matched local {matched_local.strftime('%Y-%m-%d %H:%M %Z')} "
+            f"<- UTC {matched_utc.strftime('%Y-%m-%d %H:%M UTC')}"
+        )
         return match.get("price")
 
 
-# Example usage
 async def main():
     processor = PriceProcessor()
     value = await processor.get_price_prev_quarter_shifted(country="BG", contract="A01")
     if value is not None:
-        print(f"Price (shifted target): {value}")
+        print(f"Price (current BG slot): {value}")
     else:
-        print("Failed to fetch price for shifted target")
+        print("Failed to fetch price for current BG slot")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

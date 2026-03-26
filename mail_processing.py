@@ -300,7 +300,7 @@ class FileManager:
             
             timenow = datetime.now()
             quarter_min = self.lookup_quarterly(timenow.minute)
-            if timenow.minute >= 30:
+            if quarter_min == 0:
                 quarter_hour = timenow.hour + 1
             else:
                 quarter_hour = timenow.hour                     
@@ -316,13 +316,13 @@ class FileManager:
     def lookup_quarterly(self, minutes):
 
         if 0 <= minutes <= 14:
-            return 30
-        elif 15 <= minutes <= 29:
-            return 45
-        elif 30 <= minutes <= 44:
-            return 0
-        elif 45 <= minutes <= 59:
             return 15
+        elif 15 <= minutes <= 29:
+            return 30
+        elif 30 <= minutes <= 44:
+            return 45
+        elif 45 <= minutes <= 59:
+            return 0
         else:
             raise ValueError("Minutes must be between 0 and 59")
    
