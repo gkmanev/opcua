@@ -6,7 +6,7 @@ import aiohttp
 from aiohttp import ClientTimeout, ClientError
 from zoneinfo import ZoneInfo
 
-BG_TZ = ZoneInfo("Europe/Sofia")
+CET_TZ = ZoneInfo("CET")
 
 
 class PriceProcessor:
@@ -72,7 +72,7 @@ class PriceProcessor:
             if not timestamp_utc:
                 continue
 
-            item_local = self._parse_api_datetime_utc(timestamp_utc).astimezone(BG_TZ)
+            item_local = self._parse_api_datetime_utc(timestamp_utc).astimezone(CET_TZ)
             item_local = item_local.replace(second=0, microsecond=0)
             if item_local == target_local:
                 return item
@@ -80,13 +80,13 @@ class PriceProcessor:
 
     async def get_price_prev_quarter_shifted(self, country: str = "BG", contract: str = "A01") -> Optional[float]:
         """
-        Return the price for the current BG 15-minute slot.
-        The API timestamps are UTC, so items are converted to Europe/Sofia before matching.
+        Return the price for the current CET 15-minute slot.
+        The API timestamps are UTC, so items are converted to CET before matching.
         The contract argument is kept for caller compatibility but is not used by this endpoint.
         """
         _ = contract
 
-        now_local = datetime.now(BG_TZ)
+        now_local = datetime.now(CET_TZ)
         target_local = self._floor_15min(now_local)
         print(
             f"Local now: {now_local.strftime('%Y-%m-%d %H:%M:%S %Z')} -> "
@@ -101,11 +101,11 @@ class PriceProcessor:
             match = self._find_item_for_local_slot(items or [], target_local)
 
         if not match:
-            print(f"No item found for BG local slot {target_local.isoformat()}.")
+            print(f"No item found for CET local slot {target_local.isoformat()}.")
             return None
 
         matched_utc = self._parse_api_datetime_utc(match["datetime_utc"])
-        matched_local = matched_utc.astimezone(BG_TZ)
+        matched_local = matched_utc.astimezone(CET_TZ)
         print(
             f"Matched local {matched_local.strftime('%Y-%m-%d %H:%M %Z')} "
             f"<- UTC {matched_utc.strftime('%Y-%m-%d %H:%M UTC')}"
@@ -117,9 +117,9 @@ async def main():
     processor = PriceProcessor()
     value = await processor.get_price_prev_quarter_shifted(country="BG", contract="A01")
     if value is not None:
-        print(f"Price (current BG slot): {value}")
+        print(f"Price (current CET slot): {value}")
     else:
-        print("Failed to fetch price for current BG slot")
+        print("Failed to fetch price for current CET slot")
 
 
 if __name__ == "__main__":
