@@ -35,6 +35,7 @@ class DataPublisher:
         self.context = context
         self.gmail_service = gmail_service
         self.is_email_send = False
+        self.file_alert_threshold = 13
         
 
     
@@ -262,6 +263,34 @@ class DataPublisher:
             body_text="Aris Problem !!!!!!",
         )
 
+    async def check_forecast_file_number(self):
+        current_file, leading_number = self.email_processor.get_current_file_in_use()
+
+        if not current_file or leading_number is None:
+            logging.warning("16:00 forecast file check skipped: no current file found.")
+            return
+
+        if leading_number >= self.file_alert_threshold:
+            logging.info(
+                f"16:00 forecast file check passed: {current_file} (leading number {leading_number})."
+            )
+            return
+
+        subject = f"Warning Aris Forecast File {current_file}"
+        body_text = (
+            f"At 16:00 the current file in use is {current_file}.\n"
+            f"The leading number is {leading_number}, which is below {self.file_alert_threshold}."
+        )
+
+        await self.gmail_service.email_georgi(
+            subject=subject,
+            body_text=body_text,
+        )
+        await self.gmail_service.email_rali(
+            subject=subject,
+            body_text=body_text,
+        )
+
 
     
 async def main():
@@ -314,6 +343,7 @@ async def main():
     scheduler.add_job(gmail_processor.proceed_forecast, CronTrigger(hour=13, minute=2))  
 
     scheduler.add_job(partial(gmail_processor.proceed_forecast, clearing=True), CronTrigger(hour=15, minute=0))
+    scheduler.add_job(publisher.check_forecast_file_number, CronTrigger(hour=16, minute=0))
     scheduler.add_job(partial(gmail_processor.proceed_forecast, clearing=True), CronTrigger(hour=16, minute=30))
     scheduler.add_job(partial(gmail_processor.proceed_forecast, clearing=True), CronTrigger(hour=17, minute=8))
 

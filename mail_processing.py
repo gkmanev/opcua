@@ -193,6 +193,31 @@ class FileManager:
         m = re.match(r"(\d+)", filename)
         return int(m.group(1)) if m else -1
 
+    def get_current_file_in_use(self, folder_name="enProMail"):
+        self.todays_excel_files.clear()
+
+        if not os.path.isdir(folder_name):
+            logging.warning(f"Folder not found: {folder_name}. No files to inspect.")
+            return None, None
+
+        for root, dirs, files in os.walk(folder_name):
+            excel_files = [f for f in files if f.lower().endswith((".xls", ".xlsx"))]
+            for exfile in excel_files:
+                self.get_file_name(exfile)
+
+            if not self.todays_excel_files:
+                logging.warning("No Excel files found for today in enProMail.")
+                return None, None
+
+            max_file = max(
+                self.todays_excel_files,
+                key=self.leading_number,
+            )
+            logging.info(f"current file in use: {max_file}")
+            return max_file, self.leading_number(max_file)
+
+        return None, None
+
     async def process_files(self):
         """
         Scans enProMail for .xls or .xlsx files, reads the first matching file,
@@ -230,31 +255,16 @@ class FileManager:
             except Exception:
                 raise ValueError(f"Unrecognized date cell value: {val!r}")
             
-        self.todays_excel_files.clear() 
         fn = "enProMail"
-        if not os.path.isdir(fn):
-            logging.warning(f"Folder not found: {fn}. No files to process.")
+        current_file, _ = self.get_current_file_in_use(fn)
+        if not current_file:
             return None
 
         for root, dirs, files in os.walk(fn):
-            # accept both .xls and .xlsx
-            excel_files = [f for f in files if f.lower().endswith((".xls", ".xlsx"))]            
-            #max_file = max(excel_files, key=self.leading_number)  
-            #print(f"MaxFile:{max_file}")
-            for exfile in excel_files:               
-                self.get_file_name(exfile)
+            if current_file not in files:
+                continue
 
-            if not self.todays_excel_files:
-                logging.warning("No Excel files found for today in enProMail.")
-                return None
-
-            max_file = max(
-                self.todays_excel_files,
-                key=self.leading_number,
-            )  # Prefer highest leading number
-            
-            logging.info(f"current file in use: {max_file}")         
-
+            max_file = current_file
             filepath = os.path.join(root, max_file)
             kind, sheet = _open_first_sheet(filepath)
 
