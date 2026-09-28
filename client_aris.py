@@ -347,7 +347,12 @@ async def main():
     scheduler.add_job(partial(gmail_processor.proceed_forecast, clearing=True), CronTrigger(hour=16, minute=30))
     scheduler.add_job(partial(gmail_processor.proceed_forecast, clearing=True), CronTrigger(hour=17, minute=8))
 
-    scheduler.add_job(publisher.get_price, IntervalTrigger(minutes=1))  
+    scheduler.add_job(
+        publisher.get_price,
+        IntervalTrigger(minutes=1),
+        misfire_grace_time=10,
+        coalesce=True,
+    )
 
 
     scheduler.start()
