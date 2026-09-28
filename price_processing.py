@@ -73,7 +73,7 @@ class PriceProcessor:
                 continue
 
             item_local = self._parse_api_datetime_utc(timestamp_utc).astimezone(CET_TZ)
-            item_local = item_local.replace(second=0, microsecond=0)
+            item_local = item_local.replace(second=0, microsecond=0)            
             if item_local == target_local:
                 return item
         return None
@@ -94,12 +94,9 @@ class PriceProcessor:
         )
 
         items = await self.fetch_prices_period(country=country, period="today")
+        # print(f"ITEMS:{items}")
         match = self._find_item_for_local_slot(items or [], target_local)
-
-        if not match:
-            items = await self.fetch_prices_period(country=country, period="yesterday")
-            match = self._find_item_for_local_slot(items or [], target_local)
-
+        
         if not match:
             print(f"No item found for CET local slot {target_local.isoformat()}.")
             return None
