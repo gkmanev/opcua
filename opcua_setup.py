@@ -9,7 +9,7 @@ _logger = logging.getLogger('asyncua')
 
 
 class OPCUAClient:
-    def __init__(self, url, client_app_uri, cert_path, private_key_path, wind_node, power_node, status_node, start_node, stop_node, freq_node=None):
+    def __init__(self, url, client_app_uri, cert_path, private_key_path, wind_node, power_node, status_node, start_node, stop_node, freq_node=None, reactive_power_node=None):
         self.client = UA_Client(url=url)
         self.client.application_uri = client_app_uri
         self.cert_path = cert_path
@@ -20,6 +20,7 @@ class OPCUAClient:
         self.start_node = start_node
         self.stop_node = stop_node
         self.freq_node = freq_node
+        self.reactive_power_node = reactive_power_node
         
 
     async def setup(self):
@@ -45,6 +46,11 @@ class OPCUAClient:
                     get_freq_node = self.client.get_node(self.freq_node)
                     freq_value = await get_freq_node.read_data_value()
 
+                reactive_power_value = None
+                if self.reactive_power_node:
+                    get_reactive_power_node = self.client.get_node(self.reactive_power_node)
+                    reactive_power_value = await get_reactive_power_node.read_data_value()
+
                 if command:
                     if command == "stop":
                         stop_node = self.client.get_node(self.stop_node)
@@ -56,7 +62,7 @@ class OPCUAClient:
                
 
 
-                return wind_value, power_value, status_value, freq_value
+                return wind_value, power_value, status_value, freq_value, reactive_power_value
         except asyncua.ua.UaStatusCodeError as e:
             _logger.error(f"OPC UA status code error: {e}")
         except asyncio.CancelledError:

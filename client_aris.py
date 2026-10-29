@@ -31,7 +31,8 @@ class DataPublisher:
         self.turbine_status_aris = None
         self.power_aris = None
         self.wind_aris = None
-        self.freq_aris = None       
+        self.freq_aris = None
+        self.reactive_power_aris = None
         self.context = context
         self.gmail_service = gmail_service
         self.is_email_send = False
@@ -54,11 +55,13 @@ class DataPublisher:
                 return None     
         try:            
             self.next_forecast_value = await self.email_processor.process_files()            
-            wind_value, power_value, turbine_status, freq_value = await self.opcua_client.read_data()   
-            self.turbine_status_aris = turbine_status.Value.Value 
+            wind_value, power_value, turbine_status, freq_value, reactive_power_value = await self.opcua_client.read_data()
+            self.turbine_status_aris = turbine_status.Value.Value
             self.power_aris = power_value.Value.Value
             self.wind_aris = wind_value.Value.Value
-            self.freq_aris = freq_value.Value.Value         
+            self.freq_aris = freq_value.Value.Value
+            self.reactive_power_aris = reactive_power_value.Value.Value
+            logging.info(f'Reactive Power: {self.reactive_power_aris}')
 
 
 
@@ -311,6 +314,7 @@ async def main():
     power_node_aris =       'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.W'
     status_node_aris =      'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurSt' 
     frequency_node_aris =   'ns=2;s=DA.Rakovo Aris.WTG01.WCNV01.GriHz'
+    reactive_power_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WGEN01.Var'
     
 
     #start/stop
@@ -326,7 +330,8 @@ async def main():
         status_node = status_node_aris,
         start_node = start_node_aris,
         stop_node = stop_node_aris,
-        freq_node= frequency_node_aris,        
+        freq_node= frequency_node_aris,
+        reactive_power_node= reactive_power_node_aris,
     )
     await opcua_client.setup()
     gmail_service = GmailService()
