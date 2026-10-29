@@ -60,16 +60,16 @@ class DataPublisher:
             self.power_aris = power_value.Value.Value
             self.wind_aris = wind_value.Value.Value
             self.freq_aris = freq_value.Value.Value
-            self.reactive_power_aris = reactive_power_value.Value.Value
-            logging.info(f'Reactive Power: {self.reactive_power_aris}')
+            self.reactive_power_aris = reactive_power_value.Value.Value if reactive_power_value is not None else None
 
 
 
             logging.info(f"FORECAST PRINT: {self.next_forecast_value}")
             logging.info(f'Turbine Status: {self.turbine_status_aris} ')
             logging.info(f'Power Aris: {to_num(self.power_aris)} kW')
-            logging.info(f'Wind Aris: {to_num(self.wind_aris)} m/s') 
-            logging.info(f'Freq Aris: {to_num(self.freq_aris)} Hz') 
+            logging.info(f'Wind Aris: {to_num(self.wind_aris)} m/s')
+            logging.info(f'Freq Aris: {to_num(self.freq_aris)} Hz')
+            logging.info(f'Reactive Power Aris: {to_num(self.reactive_power_aris)}')
          
 
             if self.next_forecast_value is None:
@@ -136,9 +136,9 @@ class DataPublisher:
              
 
         except ua.UaStatusCodeError as e:
-            print(f"OPC UA Error: {e}")
+            logging.error(f"OPC UA Error: {e}")
         except Exception as e:
-            print(f"Unexpected error: {e}")
+            logging.exception(f"Unexpected error: {e}")
     
 
     async def get_price(self):

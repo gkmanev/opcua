@@ -48,8 +48,11 @@ class OPCUAClient:
 
                 reactive_power_value = None
                 if self.reactive_power_node:
-                    get_reactive_power_node = self.client.get_node(self.reactive_power_node)
-                    reactive_power_value = await get_reactive_power_node.read_data_value()
+                    try:
+                        get_reactive_power_node = self.client.get_node(self.reactive_power_node)
+                        reactive_power_value = await get_reactive_power_node.read_data_value()
+                    except Exception as e:
+                        _logger.error(f"Reactive power read failed ({self.reactive_power_node}): {e}")
 
                 if command:
                     if command == "stop":
