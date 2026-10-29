@@ -16,8 +16,20 @@ from datetime import datetime, timedelta
 from pymodbus.datastore import ModbusSequentialDataBlock, ModbusSlaveContext, ModbusServerContext
 from pymodbus.server.async_io import ModbusTcpServer
 
+import struct
+
 import logging
 logging.basicConfig(level=logging.INFO)
+
+# Modbus holding register addresses (float32 = 2 registers each)
+REG_P_WT = 6    # WT active power (MW)
+REG_F_WT = 12   # WT frequency (Hz)
+
+
+def float32_to_registers(value):
+    # Big-endian, high word first
+    high, low = struct.unpack('>HH', struct.pack('>f', value))
+    return [high, low]
 
 
 class DataPublisher:
@@ -113,19 +125,13 @@ class DataPublisher:
                             await self.send_warning_email()
                             self.is_email_send = True   
 
-            # Handle negative values - set to 0 if negative, ensure within 16-bit range
-            power_safe = max(0, min(65535, int(self.power_aris))) if self.power_aris is not None else 0
-            wind_safe =  max(0, min(65535, int(self.wind_aris))) if self.wind_aris is not None else 0
-            freq_safe =  max(0, min(65535, int(self.freq_aris))) if self.freq_aris is not None else 0          
-            
-            # Optional: Log when values are clamped
-            if self.power_aris is not None and int(self.power_aris) != power_safe:
-                print(f"Power value adjusted: {int(self.power_aris)} -> {power_safe}")
-            if self.wind_aris is not None and int(self.wind_aris) != wind_safe:
-                print(f"Wind value adjusted: {int(self.wind_aris)} -> {wind_safe}")
-
-            # Write safe values to Modbus registers
-            self.context[0x00].setValues(3, 0, [power_safe, wind_safe, freq_safe])
+            # Write float32 values to Modbus holding registers (RC register map)
+            power_mw = to_num(self.power_aris)
+            power_mw = power_mw / 1000 if power_mw is not None else 0.0   # kW -> MW
+            freq_hz = to_num(self.freq_aris)
+            freq_hz = freq_hz if freq_hz is not None else 0.0
+            self.context[0x00].setValues(3, REG_P_WT, float32_to_registers(power_mw))
+            self.context[0x00].setValues(3, REG_F_WT, float32_to_registers(freq_hz))
 
             await self.blynk_send_power()
             await self.blynk_send_wind()
