@@ -314,7 +314,7 @@ async def main():
     power_node_aris =       'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.W'
     status_node_aris =      'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.TurSt' 
     frequency_node_aris =   'ns=2;s=DA.Rakovo Aris.WTG01.WCNV01.GriHz'
-    reactive_power_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WGEN01.Var'
+    reactive_power_node_aris = 'ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.Var'
     
 
     #start/stop
