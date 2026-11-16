@@ -17,11 +17,14 @@ SERVER_URL = "opc.tcp://100.127.1.220:62550/DataAccessServer"
 APPLICATION_URI = "urn:your-org:aris:opcua-client:pi2"
 WIND_NODE_ID = "ns=2;s=DA.Rakovo Aris.WTG01.WMET01.HorWdSpd"
 POWER_NODE_ID = "ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.W"
+REACTIVE_POWER_NODE_ID = "ns=2;s=DA.Rakovo Aris.WTG01.WTUR01.Var"
 FREQUENCY_NODE_ID = "ns=2;s=DA.Rakovo Aris.WTG01.WCNV01.GriHz"
 READ_INTERVAL_SECONDS = 60
 MODBUS_ADDRESS = ("0.0.0.0", 16599)
-REG_P_WT = 6    # Active power in MW, float32 (two registers)
-REG_F_WT = 12   # Frequency in Hz, float32 (two registers)
+# Modbus holding register addresses; each float32 uses two registers.
+REG_P_WT = 6    # P_WT: active power in MW (registers 6-7)
+REG_Q_WT = 8    # Q_WT: reactive power in MVAr (registers 8-9)
+REG_F_WT = 12   # F_WT: frequency in Hz (registers 12-13)
 
 
 def float32_to_registers(value):
@@ -32,19 +35,25 @@ def float32_to_registers(value):
 async def publish_data(client, context):
     wind_node = client.get_node(WIND_NODE_ID)
     power_node = client.get_node(POWER_NODE_ID)
+    reactive_power_node = client.get_node(REACTIVE_POWER_NODE_ID)
     frequency_node = client.get_node(FREQUENCY_NODE_ID)
 
     while True:
         # Only read from SCADA; setValues updates the local Modbus datastore.
         wind = await wind_node.read_value()
         power = await power_node.read_value()
+        reactive_power = await reactive_power_node.read_value()
         frequency = await frequency_node.read_value()
         power_registers = float32_to_registers(float(power) / 1000)
+        # SCADA reactive power is assumed to be in kVAr; convert to MVAr.
+        reactive_power_registers = float32_to_registers(float(reactive_power) / 1000)
         frequency_registers = float32_to_registers(float(frequency))
         context[0x00].setValues(3, REG_P_WT, power_registers)
+        context[0x00].setValues(3, REG_Q_WT, reactive_power_registers)
         context[0x00].setValues(3, REG_F_WT, frequency_registers)
         print(
-            f"Power: {power} kW | Wind: {wind} m/s | Frequency: {frequency} Hz",
+            f"Power: {power} kW | Reactive power: {reactive_power} kVAr | "
+            f"Wind: {wind} m/s | Frequency: {frequency} Hz",
             flush=True,
         )
         await asyncio.sleep(READ_INTERVAL_SECONDS)
