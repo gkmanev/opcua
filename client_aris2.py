@@ -1,10 +1,11 @@
 """Read Aris telemetry and serve it over Modbus TCP without writing to SCADA."""
 
 import asyncio
+import logging
 import struct
 from pathlib import Path
 
-from asyncua import Client
+from asyncua import Client, ua
 from pymodbus.datastore import (
     ModbusSequentialDataBlock,
     ModbusSlaveContext,
@@ -42,7 +43,14 @@ async def publish_data(client, context):
         # Only read from SCADA; setValues updates the local Modbus datastore.
         wind = await wind_node.read_value()
         power = await power_node.read_value()
-        reactive_power = await reactive_power_node.read_value()
+        try:
+            reactive_power = await reactive_power_node.read_value()
+        except ua.uaerrors.BadNodeIdUnknown:
+            logging.warning(
+                "Reactive power node does not exist: %s; publishing Q_WT as NaN",
+                REACTIVE_POWER_NODE_ID,
+            )
+            reactive_power = float("nan")
         frequency = await frequency_node.read_value()
         power_registers = float32_to_registers(float(power) / 1000)
         # SCADA reactive power is assumed to be in kVAr; convert to MVAr.
